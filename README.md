@@ -1,29 +1,7 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+Sort of different scripts written mainly in Python or Shell which are useful for QM/MM calculations using ChemShell, Turbomole and Amber.
 
-### What is this repository for? ###
+# energy_plots.py
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
-
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+Takes the output of a QM/MM calculation from ChemShell (interfaced to either Turbomole or Gaussian) and plots the energies (QM/MM, QM and MM) along the optimisation of the structure or the optimisation of each point of a scan calculation.
