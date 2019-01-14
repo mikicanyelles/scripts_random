@@ -30,7 +30,7 @@ p000 = gantt.Project(name='WT 12-LOX')
 p001 = gantt.Project(name='2MT LTA4H')
 p1 = gantt.Project(name='12-LOX Patent')
 p2 = gantt.Project(name='Tools')
-p20 = gantt.Project(name='pyLOXr')
+p20 = gantt.Project(name='MD Analyzer')
 p200 = gantt.Project(name='RMSD module')
 p201 = gantt.Project(name='Distances module')
 p202 = gantt.Project(name='Frame selector module')
@@ -93,11 +93,31 @@ p001.add_task(p001t1)
     # estructura pel docking.
 
 
+### MD Analyzer
 
+p20t0 = gantt.Task(name='RMSD module',
+                    start=dt.date(2018, 10, 15),
+                    duration=60,
+                    percent_done=100)
+p20.add_task(p20t0)
 
+p20t1 = gantt.Task(name='Distance module',
+                    start=dt.date(2018, 10, 15),
+                    duration=90,
+                    percent_done=100)
+p20.add_task(p20t1)
 
+p20t2 = gantt.Task(name='Frame selector module',
+                    start=dt.date(2019, 1, 14),
+                    duration=90,
+                    percent_done=0)
+p20.add_task(p20t2)
 
-
+p20t3 = gantt.Task(name='QM/MM module',
+                    start=dt.date(2019, 1, 14),
+                    duration=90,
+                    percent_done=0)
+p20.add_task(p20t3)
 
 
 
