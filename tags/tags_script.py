@@ -131,28 +131,32 @@ def read_dict_tags(argsdict, s): #return part_dict
 
 # CREATE COMBINE_DICTS AGAIN!!!!!!
 def combine_dicts(dict_list): #return gen_dict
-    tags_list_complete = []
+    tags_list = []
+
     for i in range(len(dict_list)):
         for j in range(len(list(dict_list[i].keys()))):
-            tags_list_complete.append(list(dict_list[i].keys())[j])
-    tags_list_complete_set = list(set(tags_list_complete))
+            tags_list.append(list(dict_list[i].keys())[j])
+
+    tags_list = list(set(tags_list))
 
     gen_dict = dict()
-    for i in range(len(tags_list_complete_set)):
-        for j in range(len(dict_list)):
-            if dict_list[j][str(tags_list_complete_set[i])]:
-                if len(dict_list[j][str(tags_list_complete_set[i])]) != 0:
-                    gen_dict[str(tags_list_complete_set[i])].append(dict_list[j][str(tags_list_complete_set[i])])
-                    
-                else :
-                    gen_dict[str(tags_list_complete_set[i])] = []
-                    gen_dict[str(tags_list_complete_set[i])].append(dict_list[j][str(tags_list_complete_set[i])])
+    for i in range(len(dict_list)):
+        for j in range(len(tags_list)):
+            if tags_list[j] in dict_list[i].keys():
+                if tags_list[j] in gen_dict.keys():
+                    for k in range(len(dict_list[i][tags_list[j]])):
+                        gen_dict[tags_list[j]].append(dict_list[i][tags_list[j]][k])
+                else:
+                    gen_dict[tags_list[j]] = []
+                    for k in range(len(dict_list[i][tags_list[j]])):
+                        gen_dict[tags_list[j]].append(dict_list[i][tags_list[j]][k])
+            else:
+                pass
 
-    
     gen_dict = dict(collections.OrderedDict(sorted(gen_dict.items())))
 
     for k in range(len(list(gen_dict.keys()))):
-        gen_dict[str(list(gen_dict.keys())[k])] = list(set(gen_dict[str(list(gen_dict.keys())[k])]))
+        gen_dict[str(list(gen_dict.keys())[k])] = sorted(list(set(gen_dict[str(list(gen_dict.keys())[k])])), reverse=False)
 
     return gen_dict
 
