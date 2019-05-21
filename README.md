@@ -11,5 +11,8 @@ Takes the output of a QM/MM calculation from ChemShell (interfaced to either Tur
 
 Creates a Gantt Diagram using the python-gantt package.
 
+# taglatex.py
+Parser for tags in LaTeX source files. It is able to read either a tex source file or a dict file (which is a plain text with a python dictionary in one line) and write an itemized line with the 'Table of Tags' chapter in a LaTeX source file or a dict file.
+
 ## To-Do list
 - [ ] Add saving the pngs as an option (which can be modified modifing the script)

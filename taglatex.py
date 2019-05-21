@@ -1,8 +1,8 @@
+#!/usr/bin/python3
 
 import argparse
 import collections
 import sys
-import os
 
 
 parser = argparse.ArgumentParser(description="LaTeX tagger - Python program for tags on LaTeX source code.")
