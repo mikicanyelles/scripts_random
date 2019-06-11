@@ -172,7 +172,7 @@ def write_tex(argsdict, gen_dict):
     # printing on file
     out = open(argsdict['output_tex'], 'w')
 
-    out.write('\\chapter{Table of Tags}\n\n')
+    out.write('\\chapter*{Table of Tags}\\addcontentsline{toc}{chapter}{Table of Tags\n\n')
     out.write('\\begin{itemize}\n')
 
     for key in gen_dict:
