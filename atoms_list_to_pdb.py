@@ -1,6 +1,4 @@
-
 # coding: utf-8
-
 
 import MDAnalysis as mda
 import sys
@@ -21,10 +19,14 @@ for i in range(len(atoms_list)):
         except ValueError:
             pass
 
+print('The zone has %i atoms (if it is a QM zone, link atoms are not counted)' % len(atoms_num))
+
 u = mda.Universe(pdb_name)
 
 atoms_sel_list = ''
-print('The QM zone has %i atoms (link atoms are not counted)' % len(atoms_num))
+
+if sys.getrecursionlimit() < len(atoms_num):
+    sys.setrecursionlimit(len(atoms_num) + 1000)
 
 for i in range(len(atoms_num)):
     if i == len(atoms_num) - 1:
