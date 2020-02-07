@@ -106,12 +106,10 @@ else:
 try:
     f = open(filename)
     exists = True
-    # Do something with the file
-except IOError:
-    print("File not accessible")
-finally:
     f.close()
-
+except IOError:
+    exists = False
+    
 if exists == True:
     while True:
         quest = input('\'%s\' existis. Do you want to remove it ([y]/no)? ' % filename)
