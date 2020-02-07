@@ -5,6 +5,11 @@ from argparse import ArgumentParser
 parser = ArgumentParser(description="Simple script for creating lists of weights for some ChemShell calculations")
 
 parser.add_argument(
+    '-n', '--number_atoms',
+    help='Integer number corresponding to the total number of atoms of the system',
+    required=True
+    )
+parser.add_argument(
     '-act',
     help='tcl list of the active atoms. This will be the reference for building the list of weights.',
     required=True
@@ -12,13 +17,18 @@ parser.add_argument(
 parser.add_argument(
     '-qm',
     help='tcl list of the QM atoms. This is the second list, not necessarily the QM list',
-    required=True
+    required=False
     )
-
 parser.add_argument(
     '-core',
     help='tcl list of the core atoms. This is thought to be a little list of greater weight than the QM atoms',
     required=False,
+    )
+parser.add_argument(
+    '-non_act_w', '--non_act_weigth',
+    help='Float value for the non active atoms weigth (the non QM nor core). The default value is 0.0',
+    required=False,
+    default=0.0
     )
 parser.add_argument(
     '-act_w', '--act_weigth',
@@ -36,7 +46,7 @@ parser.add_argument(
     '-core_w', '--core_weigth',
     help='Float value for the core atoms weigth. The default value is 2.0',
     required=False,
-    default=1.0
+    default=2.0
     )
 
 parser.add_argument(
@@ -68,10 +78,11 @@ def list_from_file(filename):
             pass
 
     return list_
-print(argsdict['act'])
 
 list_act = list_from_file(argsdict['act'])
-list_qm = list_from_file(argsdict['qm'])
+
+if argsdict['qm'] != None:
+    list_qm = list_from_file(argsdict['qm'])
 
 if argsdict['core'] != None:
     list_ts = list_from_file(argsdict['core'])
@@ -117,21 +128,38 @@ if exists == True:
 weights = open(filename, 'w')
 
 weights.write('set weights {')
-for i in list_act:
-    if argsdict['core'] != None:
-        if i in list_qm and i not in list_ts:
-            weights.write(' ' + str(argsdict['qm_weigth']))
-        elif i in list_ts:
-            weights.write(' ' + str(argsdict['core_weigth']))
-        else:
-            weights.write(' ' + str(argsdict['act_weigth']))
-    elif argsdict['core'] == None:
-        if i in list_qm:
-            weights.write(' ' + str(argsdict['qm_weigth']))
-        else:
-            weights.write(' ' + str(argsdict['act_weigth']))
+for i in range(1,int(argsdict['number_atoms'])+1):
+    if argsdict['qm'] != None:
+        if argsdict['core'] != None:
+            if i in list_act and i not in list_qm and i not in list_ts:
+                weights.write(' ' + str(argsdict['act_weigth']))
+            elif i in list_qm and i not in list_ts:
+                weights.write(' ' + str(argsdict['qm_weigth']))
+            elif i in list_ts:
+                weights.write(' ' + str(argsdict['core_weigth']))
+            else:
+                weights.write(' ' + str(argsdict['non_act_weigth']))
+        elif argsdict['core'] == None:
+            if i in list_act and i not in list_qm:
+                weights.write(' ' + str(argsdict['act_weigth']))
+            if i in list_qm:
+                weights.write(' ' + str(argsdict['qm_weigth']))
+            else:
+                weights.write(' ' + str(argsdict['non_act_weigth']))
 
-
+    if argsdict['qm'] == None:
+        if argsdict['core'] != None:
+            if i in list_act and i not in list_ts:
+                weights.write(' ' + str(argsdict['act_weigth']))
+            elif i in list_ts:
+                weights.write(' ' + str(argsdict['core_weigth']))
+            else:
+                weights.write(' ' + str(argsdict['non_act_weigth']))
+        elif argsdict['core'] == None:
+            if i in list_act:
+                weights.write(' ' + str(argsdict['act_weigth']))
+            else:
+                weights.write(' ' + str(argsdict['non_act_weigth']))
 
 weights.write(' }')
 weights.close()
