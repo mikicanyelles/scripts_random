@@ -68,14 +68,15 @@ except ValueError:
 
 
 def list_from_file(filename):
-    file_ = open(filename).readlines()[0].split()
+    file_ = open(filename).readlines()#[0].split()
     list_ = []
 
     for i in range(len(file_)):
-        try :
-            list_.append(int(file_[i]))
-        except ValueError:
-            pass
+        for j in range(len([i].split()))
+            try :
+                list_.append(int(file_[i].split()[j]))
+            except ValueError:
+                pass
 
     return list_
 
