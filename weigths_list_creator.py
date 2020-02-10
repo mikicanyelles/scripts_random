@@ -72,7 +72,7 @@ def list_from_file(filename):
     list_ = []
 
     for i in range(len(file_)):
-        for j in range(len([i].split())):
+        for j in range(len(file_[i].split())):
             try :
                 list_.append(int(file_[i].split()[j]))
             except ValueError:
