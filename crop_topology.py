@@ -13,6 +13,7 @@ import sys
 # File
 if len(sys.argv) < 2:
     print('Input the topology/parameters and the coordinates as arguments. A name for the output file can be specified as the third argument (without an extension).')
+    sys.exit()
 
 elif len(sys.argv) == 2:
     name_pdb = sys.argv[1]
