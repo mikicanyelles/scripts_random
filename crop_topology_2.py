@@ -298,30 +298,30 @@ def topology_adapter(argsdict=argsdict):
 
 
     for line in top:
-        line.replace('CO', 'C ')
-        line.replace('CX', 'C ')
-        line.replace('c ', 'C ')
-        line.replace('c2', 'C ')
-        line.replace('c3', 'C ')
-        line.replace('cx', 'C ')
-        line.replace('ce', 'C ')
-        line.replace('cf', 'C ')
+        l_ = line.replace('CO', 'C ')
+        l_ = l_.replace('CX', 'C ')
+        l_ = l_.replace('c ', 'C ')
+        l_ = l_.replace('c2', 'C ')
+        l_ = l_.replace('c3', 'C ')
+        l_ = l_.replace('cx', 'C ')
+        l_ = l_.replace('ce', 'C ')
+        l_ = l_.replace('cf', 'C ')
 
-        line.replace('o ', 'O ')
-        line.replace('op', 'O ')
-        line.replace('os', 'O ')
+        l_ = l_.replace('o ', 'O ')
+        l_ = l_.replace('op', 'O ')
+        l_ = l_.replace('os', 'O ')
 
-        line.replace('hc', 'H ')
-        line.replace('ha', 'H ')
-        line.replace('h1', 'H ')
+        l_ = l_.replace('hc', 'H ')
+        l_ = l_.replace('ha', 'H ')
+        l_ = l_.replace('h1', 'H ')
 
         for j in range(len(heterotypes_out)):
-            line.replace(heterotypes_in[j], heterotypes_out[j])
+            l_ = l_.replace(heterotypes_in[j], heterotypes_out[j])
         
         for j in range(len(metals_out)):
-            line.replace(metals_in[j], metals_out[j])
+            l_ = l_.replace(metals_in[j], metals_out[j])
 
-        top_out.write(line)
+        top_out.write(l_)
 
     top_out.close()
     top.close()
