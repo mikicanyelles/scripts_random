@@ -284,16 +284,18 @@ def topology_adapter(argsdict=argsdict):
             heterotypes_in.append(str(top[i])[loc:loc+3])
         if ' M' in top[i] and '%' not in top[i]:
             loc = top[i].find('M')
+            if str(top[i])[loc:loc+3] == 'MET':
+                pass
             metals_in.append(str(top[i])[loc:loc+3])
 
     heterotypes_out = []
     for i in range(len(heterotypes_in)):
-        ht_ = input("Which atom is %s" % heterotypes_in[i])
+        ht_ = input("Which atom is %s: " % heterotypes_in[i])
         heterotypes_out.append('{:<3}'.format(ht_))
     
     metals_out = []
     for i in range(len(metals_in)):
-        m_ = input('Which atom is %s' % metals_in[i])
+        m_ = input('Which atom is %s: ' % metals_in[i])
         metals_out.append('{:<3}'.format(m_))
 
 
