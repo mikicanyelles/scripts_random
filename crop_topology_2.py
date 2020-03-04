@@ -287,12 +287,12 @@ def topology_adapter(argsdict=argsdict):
             metals_in.append(str(top[i])[loc:loc+3])
 
     heterotypes_out = []
-    for i in range(len(heterotypes)):
+    for i in range(len(heterotypes_in)):
         ht_ = input('Which atom is %' % heterotypes_in[i])
         heterotypes_out.append('{:<3}'.format(ht_))
     
     metals_out = []
-    for i in range(len(metals)):
+    for i in range(len(metals_in)):
         m_ = input('Which atom is %' % metals_in[i])
         metals_out.append('{:<3}'.format(m_))
 
@@ -363,7 +363,7 @@ if options['active list'] == True:
 
 if options['parameters adaption'] == True:
     while True:    
-        quest = input('Do you want to create the tcl list of the active atoms ([y]/n)? ')
+        quest = input('Do you want to adapt the atom types of the parameters file to ChemShell ([y]/n)? ')
         
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
             while options_done['crop parameters'] == True:
