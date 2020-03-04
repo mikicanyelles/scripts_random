@@ -270,7 +270,6 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
 def topology_adapter(argsdict=argsdict):
 
     top    = open(argsdict['parameters'], 'r').readlines()
-    print(top[0])
     top_out = open(str(argsdict['parameters'])[:-7] + '.mod.prmtop', 'w')
 
     heterotypes_in = []
@@ -280,10 +279,10 @@ def topology_adapter(argsdict=argsdict):
             initial = i +1
         if '%FLAG TREE_CHAIN_CLASSIFICATION' in top[i]:
             final   = i
-        if 'Y' in top[i] and '%' not in top[i]:
+        if '  Y' in top[i] and '%' not in top[i]:
             loc = top[i].find('Y')
             heterotypes_in.append(str(top[i])[loc:loc+3])
-        if 'M' in top[i] and '%' not in top[i]:
+        if ' M' in top[i] and '%' not in top[i]:
             loc = top[i].find('M')
             metals_in.append(str(top[i])[loc:loc+3])
 
