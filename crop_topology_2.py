@@ -195,7 +195,6 @@ def crop_top(argsdict=argsdict):
 
     return radius
 
-radius = 100000
 def active_atoms_list(argsdict=argsdict,radius=radius):
     if argsdict['pdb'] != None:
         u_set_act = Universe(argsdict['pdb'])
@@ -338,6 +337,10 @@ if options['crop parameters'] == True:
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
             radius = crop_top()
             options_done['crop parameters'] = True
+            try :
+                radius
+            except NameError:
+                radius = 10000
             break
         elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
             break
