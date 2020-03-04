@@ -337,17 +337,18 @@ if options['crop parameters'] == True:
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
             radius = crop_top()
             options_done['crop parameters'] = True
-            try :
-                radius
-            except NameError:
-                radius = 10000
+
             break
         elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
             break
         else :
             print('Type just \'yes\' or \'no\'.')
             continue
-    
+
+try :
+    radius
+except NameError:
+    radius = 10000    
 
 if options['active list'] == True:
     while True:    
