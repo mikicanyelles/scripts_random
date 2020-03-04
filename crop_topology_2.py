@@ -270,15 +270,16 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
 def topology_adapter(argsdict=argsdict):
 
     top    = open(argsdict['parameters'], 'r').readlines()
+    print(top[0])
     top_out = open(str(argsdict['parameters'])[:-7] + '.mod.prmtop', 'w')
 
     heterotypes_in = []
     metals_in      = []
     for i in range(0, len(top)):
         if '%FLAG AMBER_ATOM_TYPE' in top[i]:
-            initial = i
+            initial = i +1
         if '%FLAG TREE_CHAIN_CLASSIFICATION' in top[i]:
-            final   = i-1
+            final   = i
         if 'Y' in top[i] and '%' not in top[i]:
             loc = top[i].find('Y')
             heterotypes_in.append(str(top[i])[loc:loc+3])
@@ -288,17 +289,20 @@ def topology_adapter(argsdict=argsdict):
 
     heterotypes_out = []
     for i in range(len(heterotypes_in)):
-        ht_ = input('Which atom is %' % heterotypes_in[i])
+        ht_ = input("Which atom is %s" % heterotypes_in[i])
         heterotypes_out.append('{:<3}'.format(ht_))
     
     metals_out = []
     for i in range(len(metals_in)):
-        m_ = input('Which atom is %' % metals_in[i])
+        m_ = input('Which atom is %s' % metals_in[i])
         metals_out.append('{:<3}'.format(m_))
 
 
-    for line in top:
-        l_ = line.replace('CO', 'C ')
+    for l in range(0, initial):
+        top_out.write(top[l])
+
+    for l in range(initial, final):
+        l_ = top[l].replace('CO', 'C ')
         l_ = l_.replace('CX', 'C ')
         l_ = l_.replace('c ', 'C ')
         l_ = l_.replace('c2', 'C ')
@@ -322,6 +326,9 @@ def topology_adapter(argsdict=argsdict):
             l_ = l_.replace(metals_in[j], metals_out[j])
 
         top_out.write(l_)
+
+    for l in range(final, len(top)):
+        top_out.write(top[l])
 
     top_out.close()
     top.close()
