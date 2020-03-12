@@ -2,7 +2,7 @@
 from parmed import load_file
 from MDAnalysis import Universe
 from MDAnalysis.exceptions import SelectionError
-import sys
+import sys, os
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description="Simple script based on parmed and MDAnalysis for cropping AMBER topologies for ChemShell QM/MM calculations.")
@@ -98,6 +98,22 @@ def crop_top(argsdict=argsdict):
     elif argsdict['output'] == None:
         output = parameters[:-7]
 
+    while True:
+        quest = input('The file exists. Do you want to overwrite it ([y]/n)?')
+
+        if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
+            os.remove(str(output + '.cropped.prmtop'))
+            break
+        elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
+            print('The cropped parameters cannot be saved. Rerun the script specifiying an output name or let overwrite the file.')
+            quit()
+            break
+        else :
+            print('Please, answer \'yes\' or \'no\'.')
+            continue
+
+    
+
     u_top = Universe(parameters)
 
     ligand = input('Type the number or the three letters code (only if it is a non-standard residue) of the central residue: ')
@@ -121,7 +137,7 @@ def crop_top(argsdict=argsdict):
         
         if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
             break
-        elif quest in ('no', 'NO', 'No', 'nO', 0):
+        elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
             if err != True:
                 print('Please, reselect the ligand then.')
             
