@@ -58,7 +58,7 @@ def options_parser(argsdict=argsdict):
     '''
 
     options      = {'crop parameters' : None, 'active list' : None, 'parameters adaption' : None}
-    options_done = {'crop parameters' : None, 'active list' : None, 'parameters adaption' : None}
+    options_done = {'crop parameters' : False, 'active list' : False, 'parameters adaption' : False}
 
     if argsdict['parameters'] != None and (argsdict['coordinates'] != None or argsdict['pdb'] != None):
         options['crop parameters']     = True
@@ -280,13 +280,26 @@ def topology_adapter(argsdict=argsdict):
         if '%FLAG TREE_CHAIN_CLASSIFICATION' in top[i]:
             final   = i
         if '  Y' in top[i] and '%' not in top[i]:
-            loc = top[i].find('Y')
-            heterotypes_in.append(str(top[i])[loc:loc+3])
+            index = 0
+            while index < len(top[i]):
+                index = top[i].find('Y', index)
+                print(index)
+                print(str(top[i])[loc:loc+3])
+                if index == -1:
+                    break
+                elif index != -1:
+                    loc = top[i].find(' Y', index-1) + 1
+                    print(loc)
+                    heterotypes_in.append(str(top[i])[loc:loc+3])
+                    index += 1
+                    
         if ' M' in top[i] and '%' not in top[i]:
-            loc = top[i].find('M')
-            if str(top[i])[loc:loc+3] == 'MET':
+            loc = top[i].find(' M') + 1
+            try :
+                int(str(top[i])[loc+1:loc+3])
+                metals_in.append(str(top[i])[loc:loc+3])
+            except ValueError:
                 pass
-            metals_in.append(str(top[i])[loc:loc+3])
 
     heterotypes_out = []
     for i in range(len(heterotypes_in)):
@@ -303,7 +316,11 @@ def topology_adapter(argsdict=argsdict):
         top_out.write(top[l])
 
     for l in range(initial, final):
-        l_ = top[l].replace('CO', 'C ')
+        l_ = top[l].replace('hc', 'H ')
+        l_ = l_.replace('ha', 'H ')
+        l_ = l_.replace('h1', 'H ')
+
+        l_ = l_.replace('CO', 'C ')
         l_ = l_.replace('CX', 'C ')
         l_ = l_.replace('c ', 'C ')
         l_ = l_.replace('c2', 'C ')
@@ -312,13 +329,11 @@ def topology_adapter(argsdict=argsdict):
         l_ = l_.replace('ce', 'C ')
         l_ = l_.replace('cf', 'C ')
 
-        l_ = l_.replace('o ', 'O ')
         l_ = l_.replace('op', 'O ')
         l_ = l_.replace('os', 'O ')
+        l_ = l_.replace('o ', 'O ')
 
-        l_ = l_.replace('hc', 'H ')
-        l_ = l_.replace('ha', 'H ')
-        l_ = l_.replace('h1', 'H ')
+        l_ = l_.replace('Na+', 'NA+')
 
         for j in range(len(heterotypes_out)):
             l_ = l_.replace(heterotypes_in[j], heterotypes_out[j])
@@ -332,7 +347,7 @@ def topology_adapter(argsdict=argsdict):
         top_out.write(top[l])
 
     top_out.close()
-    top.close()
+    #top.close()
 
 
 
@@ -374,25 +389,31 @@ if options['parameters adaption'] == True:
         quest = input('Do you want to adapt the atom types of the parameters file to ChemShell ([y]/n)? ')
         
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
-            while options_done['crop parameters'] == True:
-                quest2 = input('Do you want to use the new topology (1) or the source one (2) ([1]/2)? ')
+            if options_done['crop parameters'] == False:
+                topology_adapter()
 
-                if quest2 in ('', '1'):
-                    if argsdict['output'] == None:
-                        argsdict['parameters'] = str(argsdict['parameters'])[:-7] + '.cropped.prmtop'
-                    elif argsdict['output'] != None:
-                        argsdict['parameters'] = argsdict['output'] + '.cropped.prmtop'
+            elif options_done['crop parameters'] == True:
+                while options_done['crop parameters'] == True:
+                    quest2 = input('Do you want to use the new topology (1) or the source one (2) ([1]/2)? ')
 
-                    topology_adapter()
-                    options_done['crop parameters'] == False
-                elif quest2 == '2':
-                    topology_adapter()
-                    options_done['crop parameters'] == False
+                    if quest2 in ('', '1'):
+                        if argsdict['output'] == None:
+                            argsdict['parameters'] = str(argsdict['parameters'])[:-7] + '.cropped.prmtop'
+                        elif argsdict['output'] != None:
+                            argsdict['parameters'] = argsdict['output'] + '.cropped.prmtop'
 
-                else :
-                    print('Type just \'1\' or \'2\'.')
-                    options_done['crop parameters'] == True
+                        topology_adapter()
+                        options_done['crop parameters'] == False
+                    elif quest2 == '2':
+                        topology_adapter()
+                        options_done['crop parameters'] == False
+
+                    else :
+                        print('Type just \'1\' or \'2\'.')
+                        options_done['crop parameters'] == True
+
             break
+            
         elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
             break
         else :
