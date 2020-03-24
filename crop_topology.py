@@ -49,11 +49,11 @@ if argsdict['coordinates'] != None and argsdict['pdb'] != None:
 def options_parser(argsdict=argsdict):
     '''
     This function takes a the dictionary created using the argparse module
-    and returns a dictionary with the available options. The argsdict is 
+    and returns a dictionary with the available options. The argsdict is
     also output because it may has suffered some modifications.
-    The input dictionary has to include the following keys: 'parameters', 
-    'coordinates', 'pdb' and 'output'. 
-    The output dictionary has to include the following keys: 'crop topology', 
+    The input dictionary has to include the following keys: 'parameters',
+    'coordinates', 'pdb' and 'output'.
+    The output dictionary has to include the following keys: 'crop topology',
     'active list', 'parameters adaption'.
     '''
 
@@ -64,7 +64,7 @@ def options_parser(argsdict=argsdict):
         options['crop parameters']     = True
         options['active list']         = True
         options['parameters adaption'] = True
-    
+
     elif argsdict['parameters'] != None and argsdict['coordinates'] == None and argsdict['pdb'] == None:
         options['crop parameters']     = False
         options['active list']         = False
@@ -81,7 +81,7 @@ def options_parser(argsdict=argsdict):
 
 
     return options, options_done
-    
+
 
 def crop_top(argsdict=argsdict):
 
@@ -98,21 +98,22 @@ def crop_top(argsdict=argsdict):
     elif argsdict['output'] == None:
         output = parameters[:-7]
 
-    while True:
-        quest = input('The file exists. Do you want to overwrite it ([y]/n)?')
+    if output in os.listdir():
+        while True:
+            quest = input('The file exists. Do you want to overwrite it ([y]/n)?')
 
-        if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
-            os.remove(str(output + '.cropped.prmtop'))
-            break
-        elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
-            print('The cropped parameters cannot be saved. Rerun the script specifiying an output name or let overwrite the file.')
-            quit()
-            break
-        else :
-            print('Please, answer \'yes\' or \'no\'.')
-            continue
+            if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
+                os.remove(str(output + '.cropped.prmtop'))
+                break
+            elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
+                print('The cropped parameters cannot be saved. Rerun the script specifiying an output name or let overwrite the file.')
+                quit()
+                break
+            else :
+                print('Please, answer \'yes\' or \'no\'.')
+                continue
 
-    
+
 
     u_top = Universe(parameters)
 
@@ -128,19 +129,19 @@ def crop_top(argsdict=argsdict):
     except SelectionError:
         print('The selected residue does not exist. Please, reselect it.')
         err = True
-    
+
     while True:
         if err == True:
             quest = 'no'
         else :
             quest = input('Is the residue correct ([y]/n)? ')
-        
+
         if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
             break
         elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
             if err != True:
                 print('Please, reselect the ligand then.')
-            
+
             err = False
             ligand = input('Type the number or the three letters code (only if it is a non-standard residue) of the central residue: ')
             try:
@@ -153,7 +154,7 @@ def crop_top(argsdict=argsdict):
             except SelectionError:
                 print('The selected residue does not exist. Please, reselect it.')
                 err = True
-            
+
             continue
         else :
             print('Type only yes or no')
@@ -175,7 +176,7 @@ def crop_top(argsdict=argsdict):
             quest = 'no'
         else :
             quest = input('Is this correct ([y]/n)? ')
-        
+
         if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
             break
         elif ('no', 'NO', 'No', 'nO', 0):
@@ -202,7 +203,7 @@ def crop_top(argsdict=argsdict):
     topology.box = None
     topology.strip(':WAT&:%s<@%s' % (ligand, radius))
     topology.strip(':Na+&:%s<@%s' % (ligand, radius))
-    topology.strip(':Cl-&:%s<@%s' % (ligand, radius))  
+    topology.strip(':Cl-&:%s<@%s' % (ligand, radius))
 
     topology.write_parm(output + '.cropped.prmtop')
     topology.save(output + '.cropped.inpcrd')
@@ -268,7 +269,7 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
         except ValueError:
             print("Type just the number, please.")
             continue
-    
+
     selection = u_set_act.select_atoms(str('byres around %s bynum %s' % (radius_set_act, carbon)))
 
     txt = open('set_act_%s_%s' % (output, radius_set_act), 'w')
@@ -308,7 +309,7 @@ def topology_adapter(argsdict=argsdict):
                     print(loc)
                     heterotypes_in.append(str(top[i])[loc:loc+3])
                     index += 1
-                    
+
         if ' M' in top[i] and '%' not in top[i]:
             loc = top[i].find(' M') + 1
             try :
@@ -321,7 +322,7 @@ def topology_adapter(argsdict=argsdict):
     for i in range(len(heterotypes_in)):
         ht_ = input("Which atom is %s: " % heterotypes_in[i])
         heterotypes_out.append('{:<3}'.format(ht_))
-    
+
     metals_out = []
     for i in range(len(metals_in)):
         m_ = input('Which atom is %s: ' % metals_in[i])
@@ -353,7 +354,7 @@ def topology_adapter(argsdict=argsdict):
 
         for j in range(len(heterotypes_out)):
             l_ = l_.replace(heterotypes_in[j], heterotypes_out[j])
-        
+
         for j in range(len(metals_out)):
             l_ = l_.replace(metals_in[j], metals_out[j])
 
@@ -370,10 +371,10 @@ def topology_adapter(argsdict=argsdict):
 options, options_done = options_parser()
 
 if options['crop parameters'] == True:
-    
-    while True:    
+
+    while True:
         quest = input('Do you want to crop the system ([y]/n)? ')
-        
+
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
             radius = crop_top()
             options_done['crop parameters'] = True
@@ -383,12 +384,12 @@ if options['crop parameters'] == True:
         else :
             print('Type just \'yes\' or \'no\'.')
             continue
-        
+
 
 if options['active list'] == True:
-    while True:    
+    while True:
         quest = input('Do you want to create the tcl list of the active atoms ([y]/n)? ')
-        
+
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
             active_atoms_list(argsdict, radius)
             options_done['active list'] = True
@@ -401,9 +402,9 @@ if options['active list'] == True:
 
 
 if options['parameters adaption'] == True:
-    while True:    
+    while True:
         quest = input('Do you want to adapt the atom types of the parameters file to ChemShell ([y]/n)? ')
-        
+
         if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
             if options_done['crop parameters'] == False:
                 topology_adapter()
@@ -429,7 +430,7 @@ if options['parameters adaption'] == True:
                         options_done['crop parameters'] == True
 
             break
-            
+
         elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
             break
         else :
