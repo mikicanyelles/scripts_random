@@ -98,12 +98,17 @@ def crop_top(argsdict=argsdict):
     elif argsdict['output'] == None:
         output = parameters[:-7]
 
-    if output in os.listdir():
+    if str(output + '.cropped.prmtop') in os.listdir() or str(output + '.cropped.inpcrd') in os.listdir() or str(output + '.cropped.pdb') in os.listdir():
         while True:
-            quest = input('The file exists. Do you want to overwrite it ([y]/n)?')
+            quest = input('The files exist. Do you want to overwrite it ([y]/n)?')
 
             if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
-                os.remove(str(output + '.cropped.prmtop'))
+                if str(output + '.cropped.prmtop') in os.listdir():
+                    os.remove(str(output + '.cropped.prmtop'))
+                if str(output + '.cropped.inpcrd') in os.listdir():
+                    os.remove(str(output + '.cropped.inpcrd'))
+                if str(output + '.cropped.pdb') in os.listdir():
+                    os.remove(str(output + '.cropped.pdb'))
                 break
             elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
                 print('The cropped parameters cannot be saved. Rerun the script specifiying an output name or let overwrite the file.')
@@ -201,14 +206,15 @@ def crop_top(argsdict=argsdict):
     topology = load_file(parameters, coordinates)
 
     topology.box = None
-    topology.strip(':WAT&:%s<@%s' % (ligand, radius))
-    topology.strip(':Na+&:%s<@%s' % (ligand, radius))
-    topology.strip(':Cl-&:%s<@%s' % (ligand, radius))
+    topology.strip(':WAT&!:%s<@%s' % (ligand, radius))
+    topology.strip(':Na+&!:%s<@%s' % (ligand, radius))
+    topology.strip(':Cl-&!:%s<@%s' % (ligand, radius))
 
     topology.write_parm(output + '.cropped.prmtop')
     topology.save(output + '.cropped.inpcrd')
+    topology.save(output + '.cropped.pdb')
 
-    print('Cropped topology and coordinates have been saved as \'%s\' and \'%s\'' % (output + '.cropped.prmtop', output + '.cropped.prmtop'))
+    print('Cropped topology and coordinates have been saved as \'%s\' and \'%s\'' % (output + '.cropped.prmtop', output + '.cropped.inpcrd'))
 
     return radius
 
@@ -300,13 +306,13 @@ def topology_adapter(argsdict=argsdict):
             index = 0
             while index < len(top[i]):
                 index = top[i].find('Y', index)
-                print(index)
-                print(str(top[i])[loc:loc+3])
+                #print(index)
+                #print(str(top[i])[loc:loc+3])
                 if index == -1:
                     break
                 elif index != -1:
                     loc = top[i].find(' Y', index-1) + 1
-                    print(loc)
+                    #print(loc)
                     heterotypes_in.append(str(top[i])[loc:loc+3])
                     index += 1
 
@@ -421,14 +427,15 @@ if options['parameters adaption'] == True:
 
                         topology_adapter()
                         options_done['crop parameters'] == False
+                        break
                     elif quest2 == '2':
                         topology_adapter()
                         options_done['crop parameters'] == False
-
+                        break
                     else :
                         print('Type just \'1\' or \'2\'.')
                         options_done['crop parameters'] == True
-
+                        continue
             break
 
         elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
