@@ -35,7 +35,7 @@ for line in file:
     if line.find('Cycle      1,') != -1:
         new.append('new')
     
-if len(new) == 1:
+if len(new) == 1 or len(new) == 0:
     type = 'optimisation'
 else :
     type = 'scan'
