@@ -212,9 +212,27 @@ def crop_top(argsdict=argsdict):
 
     topology.write_parm(output + '.cropped.prmtop')
     topology.save(output + '.cropped.inpcrd')
-    topology.save(output + '.cropped.pdb')
+    #for res in topology.residues:
+    #   res.ter = False
+    topology.write_pdb(output + '.cropped.pdb')
 
-    print('Cropped topology and coordinates have been saved as \'%s\' and \'%s\'' % (output + '.cropped.prmtop', output + '.cropped.inpcrd'))
+    pdb = open(output + '.cropped.pdb', 'r').readlines()
+    pdb_o = open(output + '.cropped.pdb.tmp', 'w')
+
+    atom = int(pdb[0][6:11])
+    for line in pdb:
+        if 'TER' in line:
+            pass
+        else :
+            new_line = line[0:6] + '{:5}' + line[11:]
+            pdb_o.write(new_line.format(atom))
+            atom += 1
+
+    pdb_o.close()
+    os.remove(output + '.cropped.pdb')
+    os.rename(output + '.cropped.pdb.tmp', output + '.cropped.pdb')
+
+    print('Cropped topology and coordinates have been saved as \'%s\', \'%s\' and \'%s\'' % (output + '.cropped.prmtop', output + '.cropped.inpcrd', output + '.cropped.pdb'))
 
     return radius
 
@@ -224,11 +242,6 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
         u_set_act = Universe(argsdict['pdb'])
     elif argsdict['parameters'] != None and argsdict['coordinates'] != None:
         u_set_act = Universe(argsdict['parameters'], argsdict['coordinates'])
-
-    if argsdict['output'] != None:
-        output = str(argsdict['output']) + '.act_list'
-    elif argsdict['output'] == None:
-        output = str(argsdict['parameters'])[:-7] + '.act_list'
 
     while True:
         try :
@@ -276,9 +289,15 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
             print("Type just the number, please.")
             continue
 
+    if argsdict['output'] != None:
+        output = str(argsdict['output']) + '_' +  str(radius_set_act) + '.act_list'
+    elif argsdict['output'] == None:
+        output = str(argsdict['parameters'])[:-7] + '.act_list'
+
     selection = u_set_act.select_atoms(str('byres around %s bynum %s' % (radius_set_act, carbon)))
 
-    txt = open('set_act_%s_%s' % (output, radius_set_act), 'w')
+#    txt = open('%s_%s' % (output, radius_set_act), 'w')
+    txt = open(output, 'w')
     txt.write('set act { ')
     for i in range(0, len(selection)):
         locA = str(selection[i]).find('<Atom ') + 6
@@ -342,6 +361,9 @@ def topology_adapter(argsdict=argsdict):
         l_ = top[l].replace('hc', 'H ')
         l_ = l_.replace('ha', 'H ')
         l_ = l_.replace('h1', 'H ')
+
+        l_ = l_.replace('2C', 'C2')
+        l_ = l_.replace('3C', 'C3')
 
         l_ = l_.replace('CO', 'C ')
         l_ = l_.replace('CX', 'C ')
