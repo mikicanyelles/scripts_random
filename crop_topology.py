@@ -5,6 +5,7 @@ from MDAnalysis.exceptions import SelectionError
 import sys, os
 from argparse import ArgumentParser
 
+#def parser_func():
 parser = ArgumentParser(description="Simple script based on parmed and MDAnalysis for cropping AMBER topologies for ChemShell QM/MM calculations.")
 
 parser.add_argument(
@@ -30,27 +31,18 @@ parser.add_argument(
 
 argsdict = vars(parser.parse_args())
 
-#if argsdict['parameters'] != None:
-#    parameters = argsdict['parameters']
-
 if argsdict['coordinates'] != None and argsdict['pdb'] != None:
     print('Both coordinates and pdb have been inputed. Only coordinates from the pdb will be used.')
     argsdict['coordinates'] = None
-#    coordinates = argsdict['pdb']
 
-#if argsdict['coordinates'] != None and argsdict['pdb'] == None:
-#    coordinates = argsdict['coordinates']
-
-#if argsdict['coordinates'] == None and argsdict['pdb'] != None:
-#    coordinates = argsdict['pdb']
-
+ #   return argsdict
 
 
 def options_parser(argsdict=argsdict):
     '''
-    This function takes a the dictionary created using the argparse module
-    and returns a dictionary with the available options. The argsdict is
-    also output because it may has suffered some modifications.
+    This function takes a the dictionary created using the argparse module and
+    returns a dictionary with the available options. The argsdict is also output
+    because it may has suffered some modifications.
     The input dictionary has to include the following keys: 'parameters',
     'coordinates', 'pdb' and 'output'.
     The output dictionary has to include the following keys: 'crop topology',
@@ -84,6 +76,15 @@ def options_parser(argsdict=argsdict):
 
 
 def crop_top(argsdict=argsdict):
+    '''
+    This functions takes the input parameters and coordinates/pdb and crops both
+    taking a residue as the centre and specifying a radius around it.
+    It saves the cropped parameters, coordinates (in AMBER format) and pdb files
+    and names it with the output string or with the filename of the parameters,
+    adding always the '.cropped' string.
+    It returns the value of the selected radius, so it can be used as threshold
+    for the active_atoms_list function.
+    '''
 
     if argsdict['parameters'] != None:
         parameters = argsdict['parameters']
@@ -238,6 +239,17 @@ def crop_top(argsdict=argsdict):
 
 radius = 10000
 def active_atoms_list(argsdict=argsdict,radius=radius):
+    '''
+    This function takes the input pdb or parameters+coordinates and saves a list
+    in tcl format (it includes the 'set act' definition of the list name and the
+    list itself). This list will be then useful for ChemShell calculations.
+    This list contains the index of a selection of atoms made specifying a central
+    atom (by its number index) and the radius around it. This radius is compared
+    to the radius selected in the crop_top function if it exists or to a very
+    big radius (10000) if it doesn't, so any radius canb be accepted.
+    It prints the total number of selectred atoms.
+    '''
+
     if argsdict['pdb'] != None:
         u_set_act = Universe(argsdict['pdb'])
     elif argsdict['parameters'] != None and argsdict['coordinates'] != None:
@@ -296,7 +308,6 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
 
     selection = u_set_act.select_atoms(str('byres around %s bynum %s' % (radius_set_act, carbon)))
 
-#    txt = open('%s_%s' % (output, radius_set_act), 'w')
     txt = open(output, 'w')
     txt.write('set act { ')
     for i in range(0, len(selection)):
@@ -310,6 +321,20 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
 
 
 def topology_adapter(argsdict=argsdict):
+    '''
+    This function takes the input parameters and change some conflictive atom
+    types on ChemShell. Moreover it changes the atom types created using MCPB
+    which describe non-common atom types as well as metals and asks the user
+    for the name of the atom.
+    It loops over the atom types section of the file and replaces all the
+    thought-to-be-conflictive atoms:
+        - hc, ha, h1
+        - 2C, 3C
+        - CO, CX, c, c2, c3, cx, ce, cf
+        - op, os, o
+        - Na+, Cl-
+    Into the non-conflictive-for-ChemShell types.
+    '''
 
     top    = open(argsdict['parameters'], 'r').readlines()
     top_out = open(str(argsdict['parameters'])[:-7] + '.mod.prmtop', 'w')
@@ -379,6 +404,7 @@ def topology_adapter(argsdict=argsdict):
         l_ = l_.replace('o ', 'O ')
 
         l_ = l_.replace('Na+', 'NA+')
+        l_ = l_.replace('Cl-', 'CL-')
 
         for j in range(len(heterotypes_out)):
             l_ = l_.replace(heterotypes_in[j], heterotypes_out[j])
@@ -395,74 +421,84 @@ def topology_adapter(argsdict=argsdict):
     #top.close()
 
 
+def main(argsdict=argsdict):
+    '''
+    This function is the main function of the program. It takes the input arguments, call the
+    available functions (specified using the options_parser function), passes the proper argsdict
+    (it may need to be modified in order to use the new files generated in the crop_top func.).
+    This function will be only run if the program is execuded as it is.
+    In the future the functions present here will be converted into functions of a package.
+    '''
 
-options, options_done = options_parser()
+    options, options_done = options_parser(argsdict)
 
-if options['crop parameters'] == True:
+    if options['crop parameters'] == True:
 
-    while True:
-        quest = input('Do you want to crop the system ([y]/n)? ')
+        while True:
+            quest = input('Do you want to crop the system ([y]/n)? ')
 
-        if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
-            radius = crop_top()
-            options_done['crop parameters'] = True
-            break
-        elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
-            break
-        else :
-            print('Type just \'yes\' or \'no\'.')
-            continue
-
-
-if options['active list'] == True:
-    while True:
-        quest = input('Do you want to create the tcl list of the active atoms ([y]/n)? ')
-
-        if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
-            active_atoms_list(argsdict, radius)
-            options_done['active list'] = True
-            break
-        elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
-            break
-        else :
-            print('Type just \'yes\' or \'no\'.')
-            continue
+            if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
+                radius = crop_top()
+                options_done['crop parameters'] = True
+                break
+            elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
+                break
+            else :
+                print('Type just \'yes\' or \'no\'.')
+                continue
 
 
-if options['parameters adaption'] == True:
-    while True:
-        quest = input('Do you want to adapt the atom types of the parameters file to ChemShell ([y]/n)? ')
+    if options['active list'] == True:
+        while True:
+            quest = input('Do you want to create the tcl list of the active atoms ([y]/n)? ')
 
-        if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
-            if options_done['crop parameters'] == False:
-                topology_adapter()
+            if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
+                active_atoms_list(argsdict, radius)
+                options_done['active list'] = True
+                break
+            elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
+                break
+            else :
+                print('Type just \'yes\' or \'no\'.')
+                continue
 
-            elif options_done['crop parameters'] == True:
-                while options_done['crop parameters'] == True:
-                    quest2 = input('Do you want to use the new topology (1) or the source one (2) ([1]/2)? ')
 
-                    if quest2 in ('', '1'):
-                        if argsdict['output'] == None:
-                            argsdict['parameters'] = str(argsdict['parameters'])[:-7] + '.cropped.prmtop'
-                        elif argsdict['output'] != None:
-                            argsdict['parameters'] = argsdict['output'] + '.cropped.prmtop'
+    if options['parameters adaption'] == True:
+        while True:
+            quest = input('Do you want to adapt the atom types of the parameters file to ChemShell ([y]/n)? ')
 
-                        topology_adapter()
-                        options_done['crop parameters'] == False
-                        break
-                    elif quest2 == '2':
-                        topology_adapter()
-                        options_done['crop parameters'] == False
-                        break
-                    else :
-                        print('Type just \'1\' or \'2\'.')
-                        options_done['crop parameters'] == True
-                        continue
-            break
+            if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
+                if options_done['crop parameters'] == False:
+                    topology_adapter()
 
-        elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
-            break
-        else :
-            print('Type just \'yes\' or \'no\'.')
-            continue
+                elif options_done['crop parameters'] == True:
+                    while options_done['crop parameters'] == True:
+                        quest2 = input('Do you want to use the new topology (1) or the source one (2) ([1]/2)? ')
 
+                        if quest2 in ('', '1'):
+                            if argsdict['output'] == None:
+                                argsdict['parameters'] = str(argsdict['parameters'])[:-7] + '.cropped.prmtop'
+                            elif argsdict['output'] != None:
+                                argsdict['parameters'] = argsdict['output'] + '.cropped.prmtop'
+
+                            topology_adapter()
+                            options_done['crop parameters'] == False
+                            break
+                        elif quest2 == '2':
+                            topology_adapter()
+                            options_done['crop parameters'] == False
+                            break
+                        else :
+                            print('Type just \'1\' or \'2\'.')
+                            options_done['crop parameters'] == True
+                            continue
+                break
+
+            elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
+                break
+            else :
+                print('Type just \'yes\' or \'no\'.')
+                continue
+
+if __name__ == '__main__':
+    main()
