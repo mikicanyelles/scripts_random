@@ -30,10 +30,10 @@ def parse_file(file_name):
 
     for line in file:
         if line.find('Contribution to energy from') != -1:
-            if list(line.split())[4] == 'turbomole:' or list(line.split())[4] == 'gaussian:'
+            if list(line.split())[4] == 'turbomole:' or list(line.split())[4] == 'gaussian:':
                 energy[2].append(float(list(line.split())[-2]))
 
-            elif list(line.split())[4] == 'dl_poly:'
+            elif list(line.split())[4] == 'dl_poly:':
                 energy[3].append(float(list(line.split())[-2]))
 
         elif line.find('QM/MM Energy:') != -1:
@@ -43,10 +43,10 @@ def parse_file(file_name):
 
     while True:
         try :
-            opt_energy[1][len(opt_energy[0])-1]
+            energy[1][len(energy[0])-1]
             break
         except IndexError:
-            del opt_energy[0][-1]
+            del energy[0][-1]
             break
 
     return energy
@@ -99,7 +99,7 @@ def plot_energy_mtl(energy):
     plt.savefig('QM_vs_MM_energies.png', transparent=False, dpi=300, bbox_inches='tight')
     plt.show()
 
-def energy_plot_tp(energy):
+def plot_energy_tp(energy):
     tp.plot(energy[0], energy[1])
 
 def main():
@@ -110,7 +110,7 @@ def main():
             write_csv(energy)
 
     except IndexError :
-        break
+        pass
 
     try :
         environ['DISPLAY']
