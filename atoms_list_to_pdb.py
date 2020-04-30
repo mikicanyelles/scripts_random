@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import MDAnalysis as mda
-import sys
+import sys, os
 
 list_name  = sys.argv[1]
 pdb_name = sys.argv[2]
@@ -12,7 +12,7 @@ atoms_num = []
 
 for i in range(len(atoms_list)):
     atoms_ar = atoms_list[i].split()
-    
+
     for j in range(len(atoms_ar)):
         try :
             atoms_num.append(int(atoms_ar[j]))
@@ -36,4 +36,5 @@ for i in range(len(atoms_num)):
 
 atoms_sel = u.select_atoms(atoms_sel_list)
 
+#atoms_sel.write(str(os.getcwd())+ list_name + '.pdb')
 atoms_sel.write(list_name + '.pdb')
