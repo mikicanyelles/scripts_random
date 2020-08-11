@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Import packages
 from parmed import load_file
 from MDAnalysis import Universe
@@ -125,12 +127,13 @@ def crop_top(argsdict=argsdict):
 
     ligand = input('Type the number or the three letters code (only if it is a non-standard residue) of the central residue: ')
     try:
-        if type(ligand) is int:
-            sel = str(u_top.select_atoms('resid %s' % ligand).residues)
-        if type(ligand) is str:
-            sel = str(u_top.select_atoms('resname %s' % ligand).residues)
-            print('The selected residue is %s' % sel[24:-3])
-            err = False
+#        if type(ligand) is int:
+        sel = str(u_top.select_atoms('resid %s or resname %s' % (ligand, ligand)).residues)
+#        elif type(ligand) is str:
+#            sel = str(u_top.select_atoms('resname %s' % ligand).residues)
+    
+        print('The selected residue is %s' % sel[24:-3])
+        err = False
 
     except SelectionError:
         print('The selected residue does not exist. Please, reselect it.')
@@ -207,9 +210,9 @@ def crop_top(argsdict=argsdict):
     topology = load_file(parameters, coordinates)
 
     topology.box = None
-    topology.strip(':WAT&!:%s<@%s' % (ligand, radius))
-    topology.strip(':Na+&!:%s<@%s' % (ligand, radius))
-    topology.strip(':Cl-&!:%s<@%s' % (ligand, radius))
+    topology.strip(':WAT&!:%s<:%s' % (ligand, radius))
+    topology.strip(':Na+&!:%s<:%s' % (ligand, radius))
+    topology.strip(':Cl-&!:%s<:%s' % (ligand, radius))
 
     topology.write_parm(output + '.cropped.prmtop')
     topology.save(output + '.cropped.inpcrd')
@@ -346,18 +349,21 @@ def topology_adapter(argsdict=argsdict):
             initial = i +1
         if '%FLAG TREE_CHAIN_CLASSIFICATION' in top[i]:
             final   = i
-        if '  Y' in top[i] and '%' not in top[i]:
+        if ('  Y' in top[i] or top[i].find('Y') == 0) and '%' not in top[i]:
             index = 0
             while index < len(top[i]):
                 index = top[i].find('Y', index)
-                #print(index)
-                #print(str(top[i])[loc:loc+3])
                 if index == -1:
                     break
                 elif index != -1:
-                    loc = top[i].find(' Y', index-1) + 1
-                    #print(loc)
-                    heterotypes_in.append(str(top[i])[loc:loc+3])
+                    if top[i].find('Y') == 0:
+                        loc = 0
+                        heterotypes_in.append(str(top[i])[loc:loc+3])
+                    else :
+                        loc = top[i].find(' Y', index-1) + 1
+                        #print(loc)
+                        heterotypes_in.append(str(top[i])[loc:loc+3])
+                    
                     index += 1
 
         if ' M' in top[i] and '%' not in top[i]:
@@ -377,7 +383,6 @@ def topology_adapter(argsdict=argsdict):
     for i in range(len(metals_in)):
         m_ = input('Which atom is %s: ' % metals_in[i])
         metals_out.append('{:<3}'.format(m_))
-
 
     for l in range(0, initial):
         top_out.write(top[l])
