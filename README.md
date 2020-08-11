@@ -36,10 +36,6 @@ Parser for tags in LaTeX source files. It is able to read either a tex source fi
 
 - Add example pics to description of each script which generates a plot.
 
-### crop_topology
-
-- Add a function to substitute the 
-
 ### energy_plots
 
 - Add saving the _pngs_ as an option (which can be modified modifing the script)
