@@ -21,7 +21,7 @@ Takes an AMBER topology file and the coordinates (either inpcrd or pdb or mol2) 
 Takes the output of a QM/MM calculation from ChemShell (interfaced to either Turbomole or Gaussian) and plots the energies (QM/MM, QM and MM) along the optimisation of the structure or the optimisation of each point of a scan calculation
 
 
-## hesian_parser
+## hessian_parser
 
 Takes the output of a hessian calculation of ChemShell (using the `force` module), parsers it and lets the user extract the most useful information such as the scructure of the QM zone (including the link atoms), a list of the calculated frequencies, the most contributing atom to a selected frequency and the contribution to a selected frequency of a selected atom. 
 
