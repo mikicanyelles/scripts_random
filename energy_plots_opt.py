@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from os import listdir, environ
 from sys import argv,exit
 import plotext.plot as plx
+from termcolor import colored
 
 def input_file():
     while True:
@@ -102,6 +103,7 @@ def plot_energy_mtl(energy):
 def plot_energy_plx(energy):
     plx.scatter(energy[0], energy[1])
     plx.show()
+    print(colored(str(len(energy[0])) +  ' points have been calculated so far', 'red'))
 
 def main():
     file_name = input_file()
