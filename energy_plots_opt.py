@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
-import terminalplot as tp
 from os import listdir, environ
 from sys import argv,exit
-
+import plotext.plot as plx
 
 def input_file():
     while True:
@@ -99,8 +98,10 @@ def plot_energy_mtl(energy):
     plt.savefig('QM_vs_MM_energies.png', transparent=False, dpi=300, bbox_inches='tight')
     plt.show()
 
-def plot_energy_tp(energy):
-    tp.plot(energy[0], energy[1])
+
+def plot_energy_plx(energy):
+    plx.scatter(energy[0], energy[1])
+    plx.show()
 
 def main():
     file_name = input_file()
@@ -116,7 +117,8 @@ def main():
         environ['DISPLAY']
         plot_energy_mtl(energy)
     except KeyError:
-        plot_energy_tp(energy)
+        plot_energy_plx(energy)
+
 
 
 if __name__ == "__main__":
