@@ -1,3 +1,4 @@
+#! /Users/mikicanyelles/miniconda3/envs/py_env/bin/python
 # coding: utf-8
 
 import paramiko
@@ -5,13 +6,14 @@ from password import password
 from prevs import prev_running_IDs, prev_waiting_IDs
 from yaml import safe_load, dump
 from time import sleep
+from datetime import datetime as dt
 import os
 
 host = "picard.uab.es"
 port = 22022
 username = "mcanyelles"
 
-db_filename = 'calcs.db'
+db_filename = '/Users/mikicanyelles/git/PhD-Journal/db/calcs.db'
 
 
 def set_ssh_connection(host=host, port=port, username=username, password=password):
@@ -45,7 +47,7 @@ def read_IDs(ssh, username=username):
         return running_IDs, waiting_IDs
 
     else :
-        print('Empty prompt!')
+        #Emptyprint('Empty prompt!')
         return None, None
 
 def read_info_running(ID, ssh):
@@ -161,13 +163,19 @@ def save_prevs(prev_running_IDs, prev_waiting_IDs):
     os.remove('prevs.py')
     os.rename('prevs.py.tmp', 'prevs.py')
 
+def db_to_git(db_filename):
+        os.system('git pull')
+        os.system('git commit %s -m \'Update on %s\'' % (db_filename, dt.now().strftime("%d/%m/%Y %H:%M:%S"))) 
+        os.system('git push')
+
+
 
 def main(prev_running_IDs, prev_waiting_IDs):
     ssh = set_ssh_connection()
 
     running_IDs, waiting_IDs = read_IDs(ssh)
-    print('running: ', running_IDs)
-    print('waiting: ', waiting_IDs)
+    #print('running: ', running_IDs)
+    #print('waiting: ', waiting_IDs)
 
     if running_IDs != None and waiting_IDs != None:
         db = safe_load(open(db_filename, 'r'))
@@ -201,11 +209,12 @@ def main(prev_running_IDs, prev_waiting_IDs):
 
 
         dump_to_db(db)
-        print('DB updated!')
+        #print('DB updated!')
         save_prevs(prev_running_IDs, prev_waiting_IDs)
 
 
         close_ssh_connection(ssh)
+        db_to_git(db_filename)
 
 if __name__ == '__main__':
     main(prev_running_IDs, prev_waiting_IDs)
