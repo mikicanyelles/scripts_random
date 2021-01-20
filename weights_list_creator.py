@@ -25,26 +25,26 @@ parser.add_argument(
     required=False,
     )
 parser.add_argument(
-    '-non_act_w', '--non_act_weigth',
-    help='Float value for the non active atoms weigth (the non QM nor core). The default value is 0.0',
+    '-non_act_w', '--non_act_weight',
+    help='Float value for the non active atoms weight (the non QM nor core). The default value is 0.0',
     required=False,
     default=0.0
     )
 parser.add_argument(
-    '-act_w', '--act_weigth',
-    help='Float value for the active atoms weigth (the non QM nor core). The default value is 0.0',
+    '-act_w', '--act_weight',
+    help='Float value for the active atoms weight (the non QM nor core). The default value is 0.0',
     required=False,
     default=0.0
     )
 parser.add_argument(
-    '-qm_w', '--qm_weigth',
-    help='Float value for the QM atoms weigth. The default value is 1.0',
+    '-qm_w', '--qm_weight',
+    help='Float value for the QM atoms weight. The default value is 1.0',
     required=False,
     default=1.0
     )
 parser.add_argument(
-    '-core_w', '--core_weigth',
-    help='Float value for the core atoms weigth. The default value is 2.0',
+    '-core_w', '--core_weight',
+    help='Float value for the core atoms weight. The default value is 2.0',
     required=False,
     default=2.0
     )
@@ -58,9 +58,9 @@ parser.add_argument(
 argsdict = vars(parser.parse_args())
 
 try :
-    float(argsdict['act_weigth'])
-    float(argsdict['qm_weigth'])
-    float(argsdict['core_weigth'])
+    float(argsdict['act_weight'])
+    float(argsdict['qm_weight'])
+    float(argsdict['core_weight'])
 except ValueError:
     print('The specified weights are not float numbers. Rerun the scripts specifying the weights in the proper way.')
     exit()
@@ -92,14 +92,14 @@ if argsdict['core'] != None:
 if argsdict['output_file_name'] == None:
     filename = ''
     if len(argsdict['act'].split('/')) ==  1:#and argsdict['act'].split('/')[0] == '':
-        filename = 'weigths_' + str(argsdict['act'])
+        filename = 'weights_' + str(argsdict['act'])
         
     elif len(argsdict['act'].split('/')) > 1:
         for i in range(0,len(argsdict['act'].split('/'))-1):
             filename = filename + str(argsdict['act'].split('/')[i]) + '/'
             
 
-        filename = filename + 'weigths_' + str(argsdict['act'].split('/')[-1])
+        filename = filename + 'weights_' + str(argsdict['act'].split('/')[-1])
 
 else:
     filename = argsdict['output_file_name']
@@ -131,34 +131,34 @@ for i in range(1,int(argsdict['number_atoms'])+1):
     if argsdict['qm'] != None:
         if argsdict['core'] != None:
             if i in list_act and i not in list_qm and i not in list_ts:
-                weights.write(' ' + str(argsdict['act_weigth']))
+                weights.write(' ' + str(argsdict['act_weight']))
             elif i in list_qm and i not in list_ts:
-                weights.write(' ' + str(argsdict['qm_weigth']))
+                weights.write(' ' + str(argsdict['qm_weight']))
             elif i in list_ts:
-                weights.write(' ' + str(argsdict['core_weigth']))
+                weights.write(' ' + str(argsdict['core_weight']))
             else:
-                weights.write(' ' + str(argsdict['non_act_weigth']))
+                weights.write(' ' + str(argsdict['non_act_weight']))
         elif argsdict['core'] == None:
             if i in list_act and i not in list_qm:
-                weights.write(' ' + str(argsdict['act_weigth']))
+                weights.write(' ' + str(argsdict['act_weight']))
             if i in list_qm:
-                weights.write(' ' + str(argsdict['qm_weigth']))
+                weights.write(' ' + str(argsdict['qm_weight']))
             else:
-                weights.write(' ' + str(argsdict['non_act_weigth']))
+                weights.write(' ' + str(argsdict['non_act_weight']))
 
     if argsdict['qm'] == None:
         if argsdict['core'] != None:
             if i in list_act and i not in list_ts:
-                weights.write(' ' + str(argsdict['act_weigth']))
+                weights.write(' ' + str(argsdict['act_weight']))
             elif i in list_ts:
-                weights.write(' ' + str(argsdict['core_weigth']))
+                weights.write(' ' + str(argsdict['core_weight']))
             else:
-                weights.write(' ' + str(argsdict['non_act_weigth']))
+                weights.write(' ' + str(argsdict['non_act_weight']))
         elif argsdict['core'] == None:
             if i in list_act:
-                weights.write(' ' + str(argsdict['act_weigth']))
+                weights.write(' ' + str(argsdict['act_weight']))
             else:
-                weights.write(' ' + str(argsdict['non_act_weigth']))
+                weights.write(' ' + str(argsdict['non_act_weight']))
 
 weights.write(' }')
 weights.close()
