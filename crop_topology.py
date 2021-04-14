@@ -171,10 +171,10 @@ def crop_top(argsdict=argsdict):
 
 
     err = False
-    radius = input('Type the desired radius around the selected ligand for the water drop (in Å): ')
+    radius = input('Type the desired radius around the selected ligand for the water drop (in ang): ')
     try:
         float(radius)
-        print('The selected radius is %s Å' % radius)
+        print('The selected radius is %s ang' % radius)
 
     except ValueError:
         print('Type a number')
@@ -191,10 +191,10 @@ def crop_top(argsdict=argsdict):
         elif ('no', 'NO', 'No', 'nO', 0):
             print('Type the number again.')
 
-            radius = input('Type the desired radius around the selected ligand for the water drop (in Å): ')
+            radius = input('Type the desired radius around the selected ligand for the water drop (in ang): ')
             try:
                 float(radius)
-                print('The selected radius is %s Å' % radius)
+                print('The selected radius is %s ang' % radius)
                 err = False
 
             except ValueError:
@@ -271,38 +271,50 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
 
 
     while True:
-        try :
-            quest = input('You selected this atom: %s. Is it correct ([y]/n)? ' % sel_carbon[locA:locB])
+       quest = input('You selected this atom: %s. Is it correct ([y]/n)? ' % sel_carbon[locA:locB])
 
-            if quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
-                while True:
-                    try:
-                        carbon = input("Type the number of the central carbon: ")
-                        sel_carbon = str(u_set_act.select_atoms("bynum %s" % carbon))
-                        locA = sel_carbon.find('[<') + 2
-                        locB = sel_carbon.find(' and segid')
-                        break
-                    except SelectionError:
-                        continue
-                continue
+       quest = str(quest).lower()
 
-            elif quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
-                break
+       if quest not in ('', 'y', 'yes', '1', 'n', 'no', '0'):
+           print("Type just \'yes\' or \'no\'.")
+           continue
 
-        except ValueError:
-            print("Type just \'yes\' or \'no\'.")
+       if quest in ('n', 'no', '0'):
+           while True:
+               try:
+                   carbon = input("Type the number of the central carbon: ")
+                   sel_carbon = str(u_set_act.select_atoms("bynum %s" % carbon))
+                   locA = sel_carbon.find('[<') + 2
+                   locB = sel_carbon.find(' and segid')
+                   break
+               except SelectionError:
+                   continue
+           continue
+
+       elif quest in ('', 'y', 'yes', '1'):
+           break
+
+#        except ValueError:
+#            print("Type just \'yes\' or \'no\'.")
+#            continue
 
     while True:
+        radius_set_act = input("Which is the desired radius (in ang)? ")
+
         try :
-            radius_set_act = float(input("Which is the desired radius (in Å)? "))
-            if radius_set_act < float(radius):
-                break
-            elif radius_set_act >= float(radius):
-                print('The selected radius for the set_act list is smaller than the radius of solvent. Please, choose a new radius for the active atoms.')
-                continue
+            radius_set_act = float(radius_set_act)
+
         except ValueError:
-            print("Type just the number, please.")
+            print('Type a number, please.')
             continue
+
+        if radius_set_act < float(radius):
+            break
+
+        elif radius_set_act >= float(radius):
+            print('The selected radius for the set_act list is smaller than the radius of solvent. Please, choose a new radius for the active atoms.')
+            continue
+
 
     if argsdict['output'] != None:
         output = str(argsdict['output']) + '_' +  str(radius_set_act) + '.act_list'
@@ -458,6 +470,7 @@ def main(argsdict=argsdict):
             quest = input('Do you want to create the tcl list of the active atoms ([y]/n)? ')
 
             if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
+                radius = 100000
                 active_atoms_list(argsdict, radius)
                 options_done['active list'] = True
                 break
