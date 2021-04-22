@@ -6,6 +6,7 @@ calcs.db
 QMMM_energies.png
 QM_vs_MM_energies.png
 passwords.py
+password.py
 diff_gcube
 diff_gcube.c
 prevs.py
