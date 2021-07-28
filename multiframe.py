@@ -1,4 +1,6 @@
-#! /users/mcanyelles/.conda/envs/py_env/bin/python3
+#! /home/mcanyelles/miniconda3/envs/pyenv/bin/python
+
+## /home/mcanyelles/.conda/envs/pyenv/bin/python3
 
 import sys
 import re
