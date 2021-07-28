@@ -1,139 +1,455 @@
+#from _typeshed import Self
+#from o2_addition import create_o2_universe, merge_protein_o2
 import MDAnalysis as mda
+from MDAnalysis.lib import distances as mdadist
+#from MDAnalysis.core.groups import Residue
 import numpy as np
 import warnings
-from math import sqrt
+from math import dist, sqrt
+import os
+import argparse
 
 
 pdbfile = 'opt_pd_0940_DHA-12LOX.pdb'
 
-def create_o2_universe():
-    n_residues = 1
-    n_atoms = n_residues * 2
 
-    resindices = np.repeat(range(n_residues), 2)
-    #assert len(resindices) == n_atoms
-    #print("resindices:", resindices[:10])
+class AddOxygen:
 
-    segindices = [0] * n_residues
-    #print("segindices:", segindices[:10])
+    def __init__(self, pdbfilename, at_num, distance=3.0, resolution='high', savepdb=True, prefix='', hide_saving_warnings=True):
+        """
+        DESCRIPTION:
+            __init__ method. Loads protein, generates coc and saves distance and resolutions parameters.
+        """
 
-    oxy = mda.Universe.empty(n_atoms,
-                            n_residues=n_residues,
-                            atom_resindex=resindices,
-                            residue_segindex=segindices,
-                            trajectory=True)
-    #print(oxy)
+        self.protein       = mda.Universe(pdbfilename)
+        self.coc           = self.protein.select_atoms('bynum %s' % at_num).positions[0]
+        self.distance      = distance
+        self.resolution    = resolution
+        self.savepdb      = savepdb
+        self.prefix        = prefix
+        self.hide_warnings = hide_saving_warnings
 
-    oxy.add_TopologyAttr('name', ['O1', 'O2']*n_residues)
-    #print(oxy.atoms.names)
+        self.positions = {
+            'high' : np.array([
+                [1,0,0],
+                [-1,0,0],    
+                [0,1,0],
+                [0,-1,0],
+                [0,0,1],
+                [0,0,-1],
+                
+                [(1/sqrt(2)),(1/sqrt(2)),0],
+                [(1/sqrt(2)),0,(1/sqrt(2))],
+                [0,(1/sqrt(2)),(1/sqrt(2))],
+                [-(1/sqrt(2)),(1/sqrt(2)),0],
+                [-(1/sqrt(2)),0,(1/sqrt(2))],
+                [0,-(1/sqrt(2)),(1/sqrt(2))],
+                [(1/sqrt(2)),-(1/sqrt(2)),0],
+                [(1/sqrt(2)),0,-(1/sqrt(2))],
+                [0,(1/sqrt(2)),-(1/sqrt(2))],
+                [-(1/sqrt(2)),-(1/sqrt(2)),0],
+                [-(1/sqrt(2)),0,-(1/sqrt(2))],
+                [0,-(1/sqrt(2)),-(1/sqrt(2))],
+                
+                [(1/sqrt(3)),(1/sqrt(3)),(1/sqrt(3))],
+                [-(1/sqrt(3)),(1/sqrt(3)),(1/sqrt(3))],
+                [(1/sqrt(3)),-(1/sqrt(3)),(1/sqrt(3))],
+                [(1/sqrt(3)),(1/sqrt(3)),-(1/sqrt(3))],
+                [-(1/sqrt(3)),-(1/sqrt(3)),(1/sqrt(3))],
+                [-(1/sqrt(3)),(1/sqrt(3)),-(1/sqrt(3))],
+                [(1/sqrt(3)),-(1/sqrt(3)),-(1/sqrt(3))],
+                [-(1/sqrt(3)),-(1/sqrt(3)),-(1/sqrt(3))]
+            ]),
 
-    oxy.add_TopologyAttr('type', ['O', 'O']*n_residues)
-    #print(oxy.atoms.types)
+            'medium' : np.array([
+                [1,0,0],
+                [-1,0,0],    
+                [0,1,0],
+                [0,-1,0],
+                [0,0,1],
+                [0,0,-1],
+                
+                [(1/sqrt(2)),(1/sqrt(2)),0],
+                [(1/sqrt(2)),0,(1/sqrt(2))],
+                [0,(1/sqrt(2)),(1/sqrt(2))],
+                [-(1/sqrt(2)),(1/sqrt(2)),0],
+                [-(1/sqrt(2)),0,(1/sqrt(2))],
+                [0,-(1/sqrt(2)),(1/sqrt(2))],
+                [(1/sqrt(2)),-(1/sqrt(2)),0],
+                [(1/sqrt(2)),0,-(1/sqrt(2))],
+                [0,(1/sqrt(2)),-(1/sqrt(2))],
+                [-(1/sqrt(2)),-(1/sqrt(2)),0],
+                [-(1/sqrt(2)),0,-(1/sqrt(2))],
+                [0,-(1/sqrt(2)),-(1/sqrt(2))],
+            ]),
 
-    oxy.add_TopologyAttr('resname', ['OXY']*n_residues)
-    oxy.add_TopologyAttr('resid', [1])
-    #print(oxy.atoms.resids)
+            'low' : np.array([
+                [1,0,0],
+                [-1,0,0],    
+                [0,1,0],
+                [0,-1,0],
+                [0,0,1],
+                [0,0,-1],
+            ])
+        }
 
-    #print(oxy.atoms.positions)
-    print(oxy)
 
-    return oxy
+    def create_o2_universe(self):
+        n_residues = 1
+        n_atoms = n_residues * 2
 
-def load_protein(pdbfilename):
+        resindices = np.repeat(range(n_residues), 2)
+
+        segindices = [0] * n_residues
+
+        oxy = mda.Universe.empty(n_atoms,
+                                n_residues=n_residues,
+                                atom_resindex=resindices,
+                                residue_segindex=segindices,
+                                trajectory=True)
+
+        oxy.add_TopologyAttr('name', ['O1', 'O2']*n_residues)
+        oxy.add_TopologyAttr('type', ['O', 'O']*n_residues)
+        oxy.add_TopologyAttr('resname', ['OXY']*n_residues)
+        oxy.add_TopologyAttr('resid', [1])
+
+
+        return oxy
+
+
+    def build_positions(self, oxy, distance=3.0, resolution='high'):
+        """
+        DESCRIPTION:
+
+        """
+
+        if distance != 3.0:
+            self.distance = distance
+        if resolution != 'high':
+            self.resolution = resolution
+
+        o2_interatomic = 1.209152596
+
+        if resolution.lower() in ('high', 'h'):
+            positions = self.positions['high']
+        elif resolution.lower() in ('medium', 'm'):
+            positions = self.positions['medium']
+        elif resolution.lower() in ('low', 'l'):
+            positions = self.positions['low']
+
+        oxys = []
+
+        for p in range(len(positions)):
+            #o = self.create_o2_universe()
+            oxys.append(oxy.copy())
+            
+
+            oxys[p].atoms.positions = np.array(
+                [positions[p]*(distance)+self.coc,
+                positions[p]*(distance+o2_interatomic)+self.coc])
+
+        return oxys
+
+
+
+    def merge_protein_oxy(self, oxys, savepdb=True, prefix=''):
+
+        if prefix != '':
+            self.prefix = prefix
+        
+        if self.prefix == '':
+
+            if 'protein_oxy' not in os.listdir():
+                os.mkdir('protein_oxy')
+
+            self.prefix = 'protein_oxy/' + pdbfile.split('.')[0]
+
+
+        if savepdb != True:
+            self.savepdb = savepdb
+
+
+        
+        # Finding first solvent molec (if any)
+        solvent = self.protein.select_atoms('resname WAT or resname Na+ or resname NA+ or resname Cl- or resname CL-')
+
+        if len(solvent.residues) != 0:
+            first_solvent = int(str(solvent.residues[0])[(str(solvent.residues[0]).find(', ')+2):str(solvent.residues[0]).find('>')])
+            last_solvent  = int(str(solvent.residues[-1])[(str(solvent.residues[-1]).find(', ')+2):str(solvent.residues[-1]).find('>')])
+
+        else :
+            first_solvent, last_solvent = None
+
+
+
+        # Generating each universe
+        #if merge_all == True:
+        #    protein_all = self.protein.copy()
+        #    protein_all.residues[first_solvent:last_solvent].resids = list(range(first_solvent + len(oxys), last_solvent+len(oxys)))
+
+        # Modifying resids indexes
+        if first_solvent != None and last_solvent != None:
+            self.protein.residues[first_solvent:last_solvent].resids = list(range(first_solvent +1, last_solvent+1))
+
+        proteins = []
+
+       
+        
+        if isinstance(oxys, list):
+            if self.hide_warnings == True:
+                warnings.filterwarnings('ignore')
+            for oxy in range(len(oxys)):
+                if first_solvent != None and last_solvent != None:
+                    oxys[oxy].residues.resids = first_solvent
+
+                    proteins.append(
+                        mda.Merge(self.protein.residues[:first_solvent-1].atoms, oxys[oxy].residues[:].atoms, self.protein.residues[first_solvent-1:].atoms)
+                    )
+
+                    if self.savepdb == True:
+                        proteins[oxy].atoms.write('%s_OXY_%s.pdb' % (self.prefix,oxy+1))
+        
+            if self.hide_warnings == True:
+                warnings.filterwarnings('default')
+
+            return proteins
+
+        else :
+            if self.hide_warnings == True:
+                warnings.filterwarnings('ignore')
+
+            if first_solvent != None and last_solvent != None:
+                oxys.residues.resids = first_solvent
+            
+            protein = mda.Merge(self.protein.residues[:first_solvent-1].atoms, oxys.residues[:].atoms, self.protein.residues[first_solvent-1:].atoms)
+
+
+            if self.savepdb == True:
+                protein.atoms.write('%s_OXY.pdb' % (self.prefix))
+            
+            if self.hide_warnings == True:
+                warnings.filterwarnings('default')
+
+            return protein
     
-    u = mda.Universe(pdbfilename)
-
-    #solvent = u.select_atoms('resname WAT or resname Na+ or resname NA+ or resname Cl- or resname CL-')
-
-    #if len(solvent.residues) != 0:
-    #    first_solvent = int(str(solvent.residues[0])[(str(solvent.residues[0]).find(', ')+2):str(solvent.residues[0]).find('>')]) - 1
-    #    protein, solvent = u.residues[:first_solvent], u.residues[first_solvent:]
-
-    #else :
-    #    protein, solvent = u.residues[:], None
-
-
-    #return protein.atoms, solvent.atoms
-    return u
-
-
-positions = np.array([
-    [1,0,0],
-    [-1,0,0],    
-    [0,1,0],
-    [0,-1,0],
-    [0,0,1],
-    [0,0,-1],
     
-    [(1/sqrt(2)),(1/sqrt(2)),0],
-    [(1/sqrt(2)),0,(1/sqrt(2))],
-    [0,(1/sqrt(2)),(1/sqrt(2))],
-    [-(1/sqrt(2)),(1/sqrt(2)),0],
-    [-(1/sqrt(2)),0,(1/sqrt(2))],
-    [0,-(1/sqrt(2)),(1/sqrt(2))],
-    [(1/sqrt(2)),-(1/sqrt(2)),0],
-    [(1/sqrt(2)),0,-(1/sqrt(2))],
-    [0,(1/sqrt(2)),-(1/sqrt(2))],
-    [-(1/sqrt(2)),-(1/sqrt(2)),0],
-    [-(1/sqrt(2)),0,-(1/sqrt(2))],
-    [0,-(1/sqrt(2)),-(1/sqrt(2))],
+    def merge_protein_all_oxys(self, oxys, savepdb=True, prefix=''):
+
+        if prefix != '':
+            self.prefix = prefix
+        
+        if self.prefix == '':
+
+            if 'protein_oxy' not in os.listdir():
+                os.mkdir('protein_oxy')
+
+            self.prefix = 'protein_oxy/' + pdbfile.split('.')[0]
+
+
+        if savepdb != True:
+            self.savepdb = savepdb
+
+
+        
+        # Finding first solvent molec (if any)
+        solvent = self.protein.select_atoms('resname WAT or resname Na+ or resname NA+ or resname Cl- or resname CL-')
+
+        if len(solvent.residues) != 0:
+            first_solvent = int(str(solvent.residues[0])[(str(solvent.residues[0]).find(', ')+2):str(solvent.residues[0]).find('>')])
+            last_solvent  = int(str(solvent.residues[-1])[(str(solvent.residues[-1]).find(', ')+2):str(solvent.residues[-1]).find('>')])
+
+        else :
+            first_solvent, last_solvent = None
+
+
+        protein_all = self.protein.copy()
+        #protein_all.residues[first_solvent:last_solvent].resids = list(range(first_solvent + len(oxys), last_solvent + len(oxys)))
+
+        # Modifying resids indexes
+        if first_solvent != None and last_solvent != None:
+            protein_all.residues[first_solvent-1:last_solvent-1].resids = list(range(first_solvent + len(oxys), last_solvent + len(oxys)))
+        
+        if self.hide_warnings == True:
+            warnings.filterwarnings('ignore')
+
+        for oxy in range(len(oxys)):
+            if first_solvent != None and last_solvent != None:
+                oxys[oxy].residues.resids = first_solvent + oxy
+
+                if oxy == 0:
+                    protein = mda.Merge(protein_all.residues[:first_solvent-1].atoms, oxys[oxy].residues.atoms)
+                elif oxy == (len(oxys) - 1):
+                    protein = mda.Merge(protein.residues[:].atoms, oxys[oxy].residues.atoms, protein_all.residues[first_solvent-1:].atoms)
+                else :
+                    protein = mda.Merge(protein.residues[:].atoms, oxys[oxy].residues.atoms)
+
+        if self.savepdb == True:
+            protein.atoms.write('%s_ALL_OXY.pdb' % (self.prefix))
     
-    [(1/sqrt(3)),(1/sqrt(3)),(1/sqrt(3))],
-    [-(1/sqrt(3)),(1/sqrt(3)),(1/sqrt(3))],
-    [(1/sqrt(3)),-(1/sqrt(3)),(1/sqrt(3))],
-    [(1/sqrt(3)),(1/sqrt(3)),-(1/sqrt(3))],
-    [-(1/sqrt(3)),-(1/sqrt(3)),(1/sqrt(3))],
-    [-(1/sqrt(3)),(1/sqrt(3)),-(1/sqrt(3))],
-    [(1/sqrt(3)),-(1/sqrt(3)),-(1/sqrt(3))],
-    [-(1/sqrt(3)),-(1/sqrt(3)),-(1/sqrt(3))]
-])
+        if self.hide_warnings == True:
+            warnings.filterwarnings('default')
+
+        return protein
 
 
-def add_o2(protein, oxy):
+    def check_clashes(self, proteins, prefix=''):
+        """
+        DESCRIPTION:
 
-#    print(protein)
-#    print(oxy)
-#    print(solvent)
+        """
 
-    print(len(protein.residues))
-    solvent = protein.select_atoms('resname WAT or resname Na+ or resname NA+ or resname Cl- or resname CL-')
+        if prefix != '':
+            self.prefix = prefix
 
-    if len(solvent.residues) != 0:
-        first_solvent = int(str(solvent.residues[0])[(str(solvent.residues[0]).find(', ')+2):str(solvent.residues[0]).find('>')])
-        last_solvent  = int(str(solvent.residues[-1])[(str(solvent.residues[-1]).find(', ')+2):str(solvent.residues[-1]).find('>')])
+        f = open(self.prefix + '_clashes.txt', 'w')
 
-        print(first_solvent, last_solvent)
-    
-        protein.residues[first_solvent:last_solvent].resids = list(range(first_solvent +1, last_solvent+1))
-        oxy.residues.resids     = first_solvent
+        f.write('The following positions have a clash with an atom of the protein or the substrate.\n\n')
+        print('The following positions have a clash with an atom of the protein or the substrate.\n\n')
 
-        u = mda.Merge(protein.residues[:first_solvent-1].atoms, oxy.residues[:].atoms, protein.residues[first_solvent-1:].atoms)
-    
-    elif solvent == None:
-        oxy.residues.resids     = list(range(len(protein.residues + 1)))
+        for protein in range(len(proteins)):
 
-        u = mda.Merge(protein, oxy)
+            sel_oxyenv  = proteins[protein].select_atoms('(around 4 resname OXY) and not resname OXY').positions
+            sel_oxy     = proteins[protein].select_atoms('resname OXY').positions
 
+            oxyenv_dist = np.min(mdadist.distance_array(sel_oxy, sel_oxyenv))
 
-    u.atoms.write('test.pdb')
+            if oxyenv_dist < 1.5:
+                f.write('\tPosition number %s has a clash.' % protein)
+                print('\tPosition number %s has a clash.' % protein)
 
-
-    return u
+        f.close()
 
 
 
+    def run(self, saveall=True):
+
+        #u             = AddOxygen()
+        oxys          = self.build_positions(self.create_o2_universe())
+        proteins      = self.merge_protein_oxy(oxys)
+        self.check_clashes(proteins)
+        if saveall == True:
+            self.merge_protein_all_oxys(oxys)
 
 
 
-#sol = create_o2_universe()
+def main(pdbfilename, at_num, distance, resolution, savepdb, prefix, hide_saving_warnings):
 
-#sol.atoms.positions = np.array([[41.6030, 34.3650, 32.4820], [40.4570, 34.8090, 32.4400]])
-#print(sol.atoms.positions)
+    system = AddOxygen(pdbfilename, at_num, distance, resolution, savepdb, prefix, hide_saving_warnings)
+    system.run()
 
-#warnings.filterwarnings("ignore")
-#u.atoms.write('test.pdb')
-#warnings.filterwarnings("default")
 
-u = load_protein(pdbfile)
-oxy = create_o2_universe()
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(prog='o2_addition',
+#                usage
+                description='Arguments for using o2_addition as CLI program')
+
+    parser.add_argument(
+        '-p', 
+        '--pdbfilename',
+        type=str,
+        action='store',
+        required=True,
+        help='Input the filename of the input structre (as pdb).',
+        )
+
+    parser.add_argument(
+        '-i', 
+        '--at_num_index',
+        type=int,
+        action='store',
+        required=True,
+        help='Index number of the central atom for placing the oxygen molecule.',
+        )
+
+    parser.add_argument(
+        '-d', 
+        '--distance',
+        type=float,
+        action='store',
+        default=3.0,
+        help='Distance for placing the oxygen molecule around the central atom. Default is 3.0 ang.',
+        )
+
+    parser.add_argument(
+        '-r', 
+        '--resolution',
+        type=str,
+        action='store',
+        choices=['high', 'medium', 'low'],
+        help='Options for selecting the resolution when placing the oxygens. \'High\' generates 26 places, \'medium\' generates 18 places and \'low\' generates 6 places.',
+        )
+
+    parser.add_argument(
+        '-s', 
+        '--save_output_pdb',
+        type=str,
+        action='store',
+        choices=['y', 'n'],#, 'Y', 'N', 'yes', 'no', 'YES', 'NO'],
+        default='y',
+        help='Trigger for the (de)activation of the option of saving the output pdbs. Default is yes',
+        )
+
+    parser.add_argument(
+        '-o', 
+        '--output_prefix',
+        type=str,
+        action='store',
+        default='',
+        help='Prefix for naming the output pdbs.',
+        )
+
+    parser.add_argument(
+        '-w', 
+        '--hide_saving_warnings',
+        type=str,
+        action='store',
+        choices=['y', 'n'],#, 'Y', 'N', 'yes', 'no', 'YES', 'NO'],
+        default='y',
+        help='Trigger for the (de)activation of the warnings when saving the pdbs',
+        )
+
+
+    args = parser.parse_args()
+
+
+    if args['s'] == 'y':
+        args['s'] = True
+    elif args['s'] == 'n':
+        args['s'] = False
+
+    if args['w'] == 'y':
+        args['w'] = True
+    elif args['w'] == 'n':
+        args['w'] = False
+
+
+
+    pdbfilename            = args['p']
+    at_num                 = args['i']
+    distance               = args['d']
+    resolution             = args['r']
+    savepdb                = args['s']
+    prefix                 = args['o']
+    hide_saving_warnings   = args['h']
+
+    print(args)
+
+    main(args['p'],
+         args['i'],
+         args['d'],
+         args['r'],
+         args['s'],
+         args['o'],
+         args['h'])
+
+
+
+
+
+
+
+
+
+
 
