@@ -21,7 +21,14 @@ class AddOxygen:
             __init__ method. Loads protein, generates coc and saves distance and resolutions parameters.
         """
 
+        if hide_saving_warnings == True:
+                warnings.filterwarnings('ignore')
+
         self.protein       = mda.Universe(pdbfilename)
+        
+        if hide_saving_warnings == True:
+                warnings.filterwarnings('default')
+
         self.coc           = self.protein.select_atoms('bynum %s' % at_num).positions[0]
         self.distance      = distance
         self.resolution    = resolution
@@ -37,7 +44,7 @@ class AddOxygen:
                 [0,-1,0],
                 [0,0,1],
                 [0,0,-1],
-                
+
                 [(1/sqrt(2)),(1/sqrt(2)),0],
                 [(1/sqrt(2)),0,(1/sqrt(2))],
                 [0,(1/sqrt(2)),(1/sqrt(2))],
@@ -301,10 +308,13 @@ class AddOxygen:
         if prefix != '':
             self.prefix = prefix
 
-        f = open(self.prefix + '_clashes.txt', 'w')
+        fc  = open(self.prefix + '_clashes.txt', 'w')
+        fnc = open(self.prefix + '_noclashes.txt', 'w')
 
-        f.write('The following positions have a clash with an atom of the protein or the substrate.\n\n')
-        print('The following positions have a clash with an atom of the protein or the substrate.\n\n')
+        fc.write('The following positions have a clash with an atom of the protein or the substrate.\n\n')
+        fnc.write('The following positions do not have a clash with an atom of the protein or the substrate.\n\n')
+        #print('The following positions have a clash with an atom of the protein or the substrate.\n\n')
+        print('The following positions do not have a clash with an atom of the protein or the substrate.\n\n')
 
         for protein in range(len(proteins)):
 
@@ -313,11 +323,15 @@ class AddOxygen:
 
             oxyenv_dist = np.min(mdadist.distance_array(sel_oxy, sel_oxyenv))
 
-            if oxyenv_dist < 1.5:
-                f.write('\tPosition number %s has a clash.' % protein)
-                print('\tPosition number %s has a clash.' % protein)
+            if oxyenv_dist < 1.4:
+                fc.write('\tPosition number %s has a clash.\n' % (protein + 1))
+                #print('\tPosition number %s has a clash.' % (protein + 1))
+            else :
+                fnc.write('\tPosition number %s does not have a clash.\n' % (protein +1))
+                print('\tPosition number %s does not have a clash.' % (protein +1))
 
-        f.close()
+        fc.close()
+        fnc.close()
 
 
 
@@ -410,38 +424,32 @@ if __name__ == '__main__':
         )
 
 
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
 
-    if args['s'] == 'y':
-        args['s'] = True
-    elif args['s'] == 'n':
-        args['s'] = False
+    pdbfilename = args['pdbfilename']
+    at_num      = args['at_num_index']
+    distance    = args['distance']
 
-    if args['w'] == 'y':
-        args['w'] = True
-    elif args['w'] == 'n':
-        args['w'] = False
+    if args['resolution'] == None:
+        resolution = 3.0
+    else :
+        resolution = args['resolution']
+
+    prefix = args['output_prefix']
+
+    if args['save_output_pdb'] == 'y':
+        savepdb = True
+    elif args['save_output_pdb'] == 'n':
+        savepdb = False
+
+    if args['hide_saving_warnings'] == 'y':
+        hide_saving_warnings = True
+    elif args['hide_saving_warnings'] == 'n':
+        hide_saving_warnings = False
 
 
-
-    pdbfilename            = args['p']
-    at_num                 = args['i']
-    distance               = args['d']
-    resolution             = args['r']
-    savepdb                = args['s']
-    prefix                 = args['o']
-    hide_saving_warnings   = args['h']
-
-    print(args)
-
-    main(args['p'],
-         args['i'],
-         args['d'],
-         args['r'],
-         args['s'],
-         args['o'],
-         args['h'])
+    main(pdbfilename, at_num, distance, resolution, savepdb, prefix, hide_saving_warnings)
 
 
 
