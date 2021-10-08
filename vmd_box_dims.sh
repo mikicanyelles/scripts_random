@@ -38,7 +38,7 @@ puts "Dimensions: \$dims"
 quit
 EOF
 
-vmd -dispdev text -nt -e water_box_dims.tcl > water_box_dims.txt
+/usr/local/bin/vmd -dispdev text -nt -e water_box_dims.tcl > water_box_dims.txt
 
 x_min=`grep Dimensions water_box_dims.txt | awk '{print $2}' | sed 's/{//'`
 y_min=`grep Dimensions water_box_dims.txt | awk '{print $3}'`
