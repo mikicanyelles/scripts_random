@@ -10,7 +10,103 @@ import os
 import argparse
 
 
-pdbfile = 'opt_pd_0940_DHA-12LOX.pdb'
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(prog='o2_addition',
+#                usage
+                description='Arguments for using o2_addition as CLI program')
+
+    parser.add_argument(
+        '-p',
+        '--pdbfilename',
+        type=str,
+        action='store',
+        required=True,
+        help='Input the filename of the input structre (as pdb).',
+        )
+
+    parser.add_argument(
+        '-i',
+        '--at_num_index',
+        type=int,
+        action='store',
+        required=True,
+        help='Index number of the central atom for placing the oxygen molecule.',
+        )
+
+    parser.add_argument(
+        '-d',
+        '--distance',
+        type=float,
+        action='store',
+        default=3.0,
+        help='Distance for placing the oxygen molecule around the central atom. Default is 3.0 ang.',
+        )
+
+    parser.add_argument(
+        '-r',
+        '--resolution',
+        type=str,
+        action='store',
+        choices=['high', 'medium', 'low'],
+        help='Options for selecting the resolution when placing the oxygens. \'High\' generates 26 places, \'medium\' generates 18 places and \'low\' generates 6 places.',
+        )
+
+    parser.add_argument(
+        '-s',
+        '--save_output_pdb',
+        type=str,
+        action='store',
+        choices=['y', 'n'],#, 'Y', 'N', 'yes', 'no', 'YES', 'NO'],
+        default='y',
+        help='Trigger for the (de)activation of the option of saving the output pdbs. Default is yes',
+        )
+
+    parser.add_argument(
+        '-o',
+        '--output_prefix',
+        type=str,
+        action='store',
+        default='',
+        help='Prefix for naming the output pdbs.',
+        )
+
+    parser.add_argument(
+        '-w',
+        '--hide_saving_warnings',
+        type=str,
+        action='store',
+        choices=['y', 'n'],#, 'Y', 'N', 'yes', 'no', 'YES', 'NO'],
+        default='y',
+        help='Trigger for the (de)activation of the warnings when saving the pdbs',
+        )
+
+
+    args = vars(parser.parse_args())
+
+
+    pdbfilename = args['pdbfilename']
+    at_num      = args['at_num_index']
+    distance    = args['distance']
+
+    if args['resolution'] == None:
+        resolution = 3.0
+    else :
+        resolution = args['resolution']
+
+    prefix = args['output_prefix']
+
+    if args['save_output_pdb'] == 'y':
+        savepdb = True
+    elif args['save_output_pdb'] == 'n':
+        savepdb = False
+
+    if args['hide_saving_warnings'] == 'y':
+        hide_saving_warnings = True
+    elif args['hide_saving_warnings'] == 'n':
+        hide_saving_warnings = False
+
+
 
 
 class AddOxygen:
@@ -25,7 +121,7 @@ class AddOxygen:
                 warnings.filterwarnings('ignore')
 
         self.protein       = mda.Universe(pdbfilename)
-        
+
         if hide_saving_warnings == True:
                 warnings.filterwarnings('default')
 
@@ -39,7 +135,7 @@ class AddOxygen:
         self.positions = {
             'high' : np.array([
                 [1,0,0],
-                [-1,0,0],    
+                [-1,0,0],
                 [0,1,0],
                 [0,-1,0],
                 [0,0,1],
@@ -57,7 +153,7 @@ class AddOxygen:
                 [-(1/sqrt(2)),-(1/sqrt(2)),0],
                 [-(1/sqrt(2)),0,-(1/sqrt(2))],
                 [0,-(1/sqrt(2)),-(1/sqrt(2))],
-                
+
                 [(1/sqrt(3)),(1/sqrt(3)),(1/sqrt(3))],
                 [-(1/sqrt(3)),(1/sqrt(3)),(1/sqrt(3))],
                 [(1/sqrt(3)),-(1/sqrt(3)),(1/sqrt(3))],
@@ -70,12 +166,12 @@ class AddOxygen:
 
             'medium' : np.array([
                 [1,0,0],
-                [-1,0,0],    
+                [-1,0,0],
                 [0,1,0],
                 [0,-1,0],
                 [0,0,1],
                 [0,0,-1],
-                
+
                 [(1/sqrt(2)),(1/sqrt(2)),0],
                 [(1/sqrt(2)),0,(1/sqrt(2))],
                 [0,(1/sqrt(2)),(1/sqrt(2))],
@@ -92,7 +188,7 @@ class AddOxygen:
 
             'low' : np.array([
                 [1,0,0],
-                [-1,0,0],    
+                [-1,0,0],
                 [0,1,0],
                 [0,-1,0],
                 [0,0,1],
@@ -149,7 +245,7 @@ class AddOxygen:
         for p in range(len(positions)):
             #o = self.create_o2_universe()
             oxys.append(oxy.copy())
-            
+
 
             oxys[p].atoms.positions = np.array(
                 [positions[p]*(distance)+self.coc,
@@ -159,24 +255,24 @@ class AddOxygen:
 
 
 
-    def merge_protein_oxy(self, oxys, savepdb=True, prefix=''):
+    def merge_protein_oxy(self, oxys, savepdb=True, pdbfilename=pdbfilename, prefix=''):
 
         if prefix != '':
             self.prefix = prefix
-        
+
         if self.prefix == '':
 
             if 'protein_oxy' not in os.listdir():
                 os.mkdir('protein_oxy')
 
-            self.prefix = 'protein_oxy/' + pdbfile.split('.')[0]
+            self.prefix = 'protein_oxy/' + pdbfilename.split('.')[0]
 
 
         if savepdb != True:
             self.savepdb = savepdb
 
 
-        
+
         # Finding first solvent molec (if any)
         solvent = self.protein.select_atoms('resname WAT or resname Na+ or resname NA+ or resname Cl- or resname CL-')
 
@@ -200,8 +296,8 @@ class AddOxygen:
 
         proteins = []
 
-       
-        
+
+
         if isinstance(oxys, list):
             if self.hide_warnings == True:
                 warnings.filterwarnings('ignore')
@@ -215,7 +311,7 @@ class AddOxygen:
 
                     if self.savepdb == True:
                         proteins[oxy].atoms.write('%s_OXY_%s.pdb' % (self.prefix,oxy+1))
-        
+
             if self.hide_warnings == True:
                 warnings.filterwarnings('default')
 
@@ -227,37 +323,37 @@ class AddOxygen:
 
             if first_solvent != None and last_solvent != None:
                 oxys.residues.resids = first_solvent
-            
+
             protein = mda.Merge(self.protein.residues[:first_solvent-1].atoms, oxys.residues[:].atoms, self.protein.residues[first_solvent-1:].atoms)
 
 
             if self.savepdb == True:
                 protein.atoms.write('%s_OXY.pdb' % (self.prefix))
-            
+
             if self.hide_warnings == True:
                 warnings.filterwarnings('default')
 
             return protein
-    
-    
-    def merge_protein_all_oxys(self, oxys, savepdb=True, prefix=''):
+
+
+    def merge_protein_all_oxys(self, oxys, savepdb=True, pdbfilename=pdbfilename, prefix=''):
 
         if prefix != '':
             self.prefix = prefix
-        
+
         if self.prefix == '':
 
             if 'protein_oxy' not in os.listdir():
                 os.mkdir('protein_oxy')
 
-            self.prefix = 'protein_oxy/' + pdbfile.split('.')[0]
+            self.prefix = 'protein_oxy/' + pdbfilename.split('.')[0]
 
 
         if savepdb != True:
             self.savepdb = savepdb
 
 
-        
+
         # Finding first solvent molec (if any)
         solvent = self.protein.select_atoms('resname WAT or resname Na+ or resname NA+ or resname Cl- or resname CL-')
 
@@ -275,7 +371,7 @@ class AddOxygen:
         # Modifying resids indexes
         if first_solvent != None and last_solvent != None:
             protein_all.residues[first_solvent-1:last_solvent-1].resids = list(range(first_solvent + len(oxys), last_solvent + len(oxys)))
-        
+
         if self.hide_warnings == True:
             warnings.filterwarnings('ignore')
 
@@ -292,7 +388,7 @@ class AddOxygen:
 
         if self.savepdb == True:
             protein.atoms.write('%s_ALL_OXY.pdb' % (self.prefix))
-    
+
         if self.hide_warnings == True:
             warnings.filterwarnings('default')
 
@@ -353,101 +449,6 @@ def main(pdbfilename, at_num, distance, resolution, savepdb, prefix, hide_saving
 
 
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(prog='o2_addition',
-#                usage
-                description='Arguments for using o2_addition as CLI program')
-
-    parser.add_argument(
-        '-p', 
-        '--pdbfilename',
-        type=str,
-        action='store',
-        required=True,
-        help='Input the filename of the input structre (as pdb).',
-        )
-
-    parser.add_argument(
-        '-i', 
-        '--at_num_index',
-        type=int,
-        action='store',
-        required=True,
-        help='Index number of the central atom for placing the oxygen molecule.',
-        )
-
-    parser.add_argument(
-        '-d', 
-        '--distance',
-        type=float,
-        action='store',
-        default=3.0,
-        help='Distance for placing the oxygen molecule around the central atom. Default is 3.0 ang.',
-        )
-
-    parser.add_argument(
-        '-r', 
-        '--resolution',
-        type=str,
-        action='store',
-        choices=['high', 'medium', 'low'],
-        help='Options for selecting the resolution when placing the oxygens. \'High\' generates 26 places, \'medium\' generates 18 places and \'low\' generates 6 places.',
-        )
-
-    parser.add_argument(
-        '-s', 
-        '--save_output_pdb',
-        type=str,
-        action='store',
-        choices=['y', 'n'],#, 'Y', 'N', 'yes', 'no', 'YES', 'NO'],
-        default='y',
-        help='Trigger for the (de)activation of the option of saving the output pdbs. Default is yes',
-        )
-
-    parser.add_argument(
-        '-o', 
-        '--output_prefix',
-        type=str,
-        action='store',
-        default='',
-        help='Prefix for naming the output pdbs.',
-        )
-
-    parser.add_argument(
-        '-w', 
-        '--hide_saving_warnings',
-        type=str,
-        action='store',
-        choices=['y', 'n'],#, 'Y', 'N', 'yes', 'no', 'YES', 'NO'],
-        default='y',
-        help='Trigger for the (de)activation of the warnings when saving the pdbs',
-        )
-
-
-    args = vars(parser.parse_args())
-
-
-    pdbfilename = args['pdbfilename']
-    at_num      = args['at_num_index']
-    distance    = args['distance']
-
-    if args['resolution'] == None:
-        resolution = 3.0
-    else :
-        resolution = args['resolution']
-
-    prefix = args['output_prefix']
-
-    if args['save_output_pdb'] == 'y':
-        savepdb = True
-    elif args['save_output_pdb'] == 'n':
-        savepdb = False
-
-    if args['hide_saving_warnings'] == 'y':
-        hide_saving_warnings = True
-    elif args['hide_saving_warnings'] == 'n':
-        hide_saving_warnings = False
-
 
     main(pdbfilename, at_num, distance, resolution, savepdb, prefix, hide_saving_warnings)
 
