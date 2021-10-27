@@ -131,7 +131,7 @@ def crop_top(argsdict=argsdict):
         sel = str(u_top.select_atoms('resid %s or resname %s' % (ligand, ligand)).residues)
 #        elif type(ligand) is str:
 #            sel = str(u_top.select_atoms('resname %s' % ligand).residues)
-    
+
         print('The selected residue is %s' % sel[24:-3])
         err = False
 
@@ -319,7 +319,10 @@ def active_atoms_list(argsdict=argsdict,radius=radius):
     if argsdict['output'] != None:
         output = str(argsdict['output']) + '_' +  str(radius_set_act) + '.act_list'
     elif argsdict['output'] == None:
-        output = str(argsdict['parameters'])[:-7] + '.act_list'
+        if argsdict['parameters'] != None:
+            output = str(argsdict['parameters'])[:-7] + '.act_list'
+        elif argsdict['pdb'] != None:
+            output = str(argsdict['pdb'])[:-4] + '.act_list'
 
     selection = u_set_act.select_atoms(str('byres around %s bynum %s' % (radius_set_act, carbon)))
 
@@ -375,7 +378,7 @@ def topology_adapter(argsdict=argsdict):
                         loc = top[i].find(' Y', index-1) + 1
                         #print(loc)
                         heterotypes_in.append(str(top[i])[loc:loc+3])
-                    
+
                     index += 1
 
         if ' M' in top[i] and '%' not in top[i]:
