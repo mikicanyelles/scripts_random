@@ -1,15 +1,12 @@
-#/usr/bin/env python3.5
--*- coding: utf8 -*-
+#! /usr/bin/env python3.5
 
-"""
-DESCRIPTION: Script for sending ChemShell jobs to Kirk cluster
-AUTHOR:      Miquel Canyelles (github.com/mikicanyelles)
-"""
+# DESCRIPTION: Script for sending ChemShell jobs to Kirk cluster
+# AUTHOR:      Miquel Canyelles (github.com/mikicanyelles)
 
-from os import getcwd, mkdir, path
-from sys import exit, system, popen
+from os import getcwd, mkdir, path, popen
+from sys import exit
 from argparse import ArgumentParser
-#import subprocess
+import subprocess
 
 # environment vars
 filename       = 'script_chemsh.pbs'
@@ -31,7 +28,7 @@ parser.add_argument('-q', '--queue', choices=['borg2', 'borg3', 'borg4'], requir
 parser.add_argument('-s', '--source_dir', help='Path to the source dir if files are not in folder.')
 parser.add_argument('-sf', '--source_dir_frame', help='Arg to specify a subfolder inside source_dir containing file for the job (useful in case of having source file organised by frames into folders.')
 parser.add_argument('-S', '--save_scratch', action='store_true', help='Save all file in scratch in local (in a subfolder).')
-parser.add_argument('-v', '--version', choice=['3.7', '3.4'], default='3.7', type=str)
+parser.add_argument('-v', '--version', choices=['3.7', '3.4'], default='3.7', type=str)
 parser.add_argument('-w', '--walltime', help='Custom walltime (in s). Max walltimes are: 1800000 for borg2 and 3600000 for borg4, borg3 has no walltime limit.')
 parser.add_argument('input_file', help='Input file')
 parser.add_argument('output_file', help='Output file')
@@ -44,11 +41,17 @@ group.add_argument('-T', '--turbomole', action='store_true', help='Use Turbomole
 
 args = parser.parse_args()
 
-
 # Queue selection
-def configure_head(args):
+def configure_head():
 
-    head = {}
+    head = {
+        'jobname'  : None,
+        'nproc'    : None,
+        'queue'    : None,
+        'walltime' : None
+        }
+
+    head['queue'] = args.queue
 
     if args.queue == 'borg2':
         if args.nproc not in (1, 2, 4, 12, 24, 36, 48):
@@ -95,7 +98,7 @@ def configure_head(args):
 
 
     if args.jobname != None:
-        head['jobname'] == args.jobname
+        head['jobname'] = args.jobname
 
     else :
         head['jobname'] = args.input_file
@@ -103,14 +106,19 @@ def configure_head(args):
     return head
 
 
-def configure_modules(args):
-    modules = {}
+def configure_modules():
+    modules = {
+        'chemsh'    : None,
+        'para_arch' : None,
+        'parnodes'  : None,
+        'qm'        : None
+        }
 
     # version
-    if args.version == 3.7:
+    if args.version == '3.7':
         modules['chemsh'] = 'chemshell/3.7_gcc6.3.0_ompi-2.0.1'
 
-    elif args.version == 3.4:
+    elif args.version == '3.4':
         modules['chemsh'] = 'chemshell-3.4.2-ifort'
 
     # QM backend
@@ -133,18 +141,23 @@ def configure_modules(args):
     return modules
 
 
-def configure_body(args):
+def configure_body():
 
-    body = {}
+    body = {
+        'input_file'       : None,
+        'output_file'      : None,
+        'source_dir'       : None,
+        'source_dir_frame' : None,
+        }
 
     # look for source_dir and frame and check if they exist
     if args.source_dir != None:
         if path.exists(args.source_dir):
-            body['source_dir'] = 'cp -f %s $TMPDIR' % args.source_dir_frame
+            body['source_dir'] = 'cp -f %s* $TMPDIR' % args.source_dir
 
             if args.source_dir_frame != None:
-                if path.exists(args.source_dir + '/' + args.source_dir_frame):
-                    body['source_dir_frame'] = 'cp -f %s/%s $TMPDIR' % (args.source_dir, args.source_dir_frame)
+                if path.exists(args.source_dir + args.source_dir_frame):
+                    body['source_dir_frame'] = 'cp -f %s%s/* $TMPDIR' % (args.source_dir, args.source_dir_frame)
 
                 else :
                         print('Frame in source dir does not exist. Check the frame number.')
@@ -171,9 +184,11 @@ def configure_body(args):
 
     return body
 
-def configure_tail(args):
+def configure_tail():
 
-    tail = {}
+    tail = {
+        'save_scratch' : None
+        }
 
     if args.save_scratch == True:
         tail['save_scratch'] = True
@@ -181,7 +196,7 @@ def configure_tail(args):
             mkdir('node')
 
     else :
-        tail['save_scratch'] = False
+        tail['save_scratch'] = ''
 
     if not path.exists('./structures'):
         mkdir('structures')
@@ -206,7 +221,7 @@ module load {chemshell}
 module load {qm}
 {parnodes}
 
-export TMPDIR=/scratch/$\{PBS_JOBNAME\}.$\{PBS_JOBID::6\}.$USER
+export TMPDIR=/scratch/${{PBS_JOBNAME}}.${{PBS_JOBID::6}}.$USER
 
 mkdir $TMPDIR
 
@@ -234,24 +249,30 @@ cp -f $TMPDIR/PES.plt $PBS_O_WORKDIR
         'nproc'    : head['nproc'],
         'walltime' : head['walltime'],
 
-        'chemshell' : modules['chemshell'],
+        'chemshell' : modules['chemsh'],
         'paraarch'  : modules['para_arch'],
         'qm'        : modules['qm'],
         'parnodes'  : modules['parnodes'],
 
         'sourcedir'      : body['source_dir'],
         'sourcedirframe' : body['source_dir_frame'],
+        'inputfile'      : args.input_file, #body['input_file'],
+        'outputfile'     : body['output_file'],
 
-        'savescratch' : tail['savescratch'],
+        'savescratch' : tail['save_scratch'],
     }
 
-    with open(filename, 'w') as f:
-        f.write(template.format(**context))
+    with open('./' + filename, 'w') as f:
+        f.write(template.format(**filler))
+        f.close()
 
 
-def submit_job(head, modules, args):
+def submit_job(head, modules):
     if args.nosub == False:
-        jobid = popen("/usr/local/torque/bin/qsub script_chemshell.pbs").read()[:6]
+#        jobid = popen("/usr/local/torque/bin/qsub script_chemshell.pbs").read()[:6]
+        jobid = subprocess.Popen(["/usr/local/torque/bin/qsub", filename], stdout=subprocess.PIPE).communicate()
+        print(jobid[0].decode('utf8'))
+        jobid = str(jobid[0].decode('utf8'))[:6]
 
         print('\n')
         print('---------Job information---------')
@@ -266,33 +287,12 @@ def submit_job(head, modules, args):
 
 
 def main():
-    head, modules, body, tail = configure_head(args), configure_modules(args), configure_body(args), configure_tail(args)
-
+    head, modules, body, tail = configure_head(), configure_modules(), configure_body(), configure_tail()
     create_pbs(head, modules, body, tail)
-    submit_job(head, modules, args)
+    submit_job(head, modules)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+main()
 
 
