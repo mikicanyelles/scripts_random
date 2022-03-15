@@ -12,7 +12,7 @@ import subprocess
 filename       = 'script_chemsh.pbs'
 walltime_borg2 = 1800000
 walltime_borg3 = None
-walltime_borg4 = 36000000
+walltime_borg4 = 21600000
 #user           = getlogin()
 #hostname       = ''
 
@@ -79,6 +79,7 @@ def configure_head():
 
         head['walltime'] = ''
 
+
     if args.queue == 'borg4':
         if args.nproc not in (1, 2, 4, 16, 32):
             print('The number of processors selected cannot be used in borg4.')
@@ -94,7 +95,7 @@ def configure_head():
                 head['walltime'] = '#PBS -l walltime=36000000'
 
         else :
-            head['walltime'] = '#PBS -l walltime=36000000'
+            head['walltime'] = '#PBS -l walltime=%s' % str(walltime_borg4)
 
 
     if args.jobname != None:
