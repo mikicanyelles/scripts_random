@@ -357,6 +357,7 @@ def topology_adapter(argsdict=argsdict):
     top    = open(argsdict['parameters'], 'r').readlines()
     top_out = open(str(argsdict['parameters'])[:-7] + '.mod.prmtop', 'w')
 
+    initial = 0
     heterotypes_in = []
     metals_in      = []
     for i in range(0, len(top)):
