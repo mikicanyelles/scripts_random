@@ -109,6 +109,7 @@ def configure_head():
 def configure_modules():
     modules = {
         'chemsh'    : None,
+        'mpirun'    : None,
         'para_arch' : None,
         'parnodes'  : None,
         'qm'        : None
@@ -137,6 +138,12 @@ def configure_modules():
         modules['qm']        = 'g09_D.01_pgi11.9-ISTANBUL'
         modules['parnodes']  = ''
         modules['para_arch'] = ''
+
+    if args.queue == 'borg4':
+        modules['mpirun'] = 'module load openmpi/2.0.1-tm_gcc-6.3.0-borg4'
+
+    else :
+        modules['mpirun'] = ''
 
     return modules
 
@@ -217,6 +224,7 @@ def create_pbs(head, modules, body, tail):
 
 . ./QFcomm/modules.profile
 module load {chemshell}
+{mpirun}
 {paraarch}
 module load {qm}
 {parnodes}
@@ -250,6 +258,7 @@ cp -f $TMPDIR/PES.plt $PBS_O_WORKDIR
         'walltime' : head['walltime'],
 
         'chemshell' : modules['chemsh'],
+        'mpirun'    : modules['mpirun'],
         'paraarch'  : modules['para_arch'],
         'qm'        : modules['qm'],
         'parnodes'  : modules['parnodes'],
