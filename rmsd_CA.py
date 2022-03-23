@@ -28,16 +28,19 @@ parser.add_argument(
 argsdict = vars(parser.parse_args())
 
 if len(argsdict['trajectory']) > 1:
-    argsdict['trajectory'] = natural_sort(argsdict['trajectories'])
+    argsdict['trajectory'] = natural_sort(argsdict['trajectory'])
 
 u = Universe(argsdict['parameters'], argsdict['trajectory'])
 
-R = rms.RMSD(u,
-    select='name CA',
+sel = u.select_atoms('name CA')
+
+R = rms.RMSD(
+    sel,
     )
 R.run()
 
-rmsd = R.results.rmsd.T
+
+rmsd = R.rmsd.T
 time = rmsd[1]
 
 plt.plot(time, rmsd[2])
