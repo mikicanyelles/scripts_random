@@ -303,11 +303,16 @@ class AddOxygen:
                 warnings.filterwarnings('ignore')
             for oxy in range(len(oxys)):
                 if first_solvent != None and last_solvent != None:
-                    oxys[oxy].residues.resids = first_solvent
+                    oxys[oxy].residues.resids = first_solvent + 2
 
                     proteins.append(
-                        mda.Merge(self.protein.residues[:first_solvent-1].atoms, oxys[oxy].residues[:].atoms, self.protein.residues[first_solvent-1:].atoms)
+                        mda.Merge(self.protein.residues[:first_solvent+1].atoms, oxys[oxy].residues[:].atoms, self.protein.residues[first_solvent+1:].atoms)
                     )
+
+                    resnum = 1
+                    for r in range(0, proteins[oxy].residues.n_residues):
+                        proteins[oxy].residues[r].resid = resnum
+                        resnum += 1
 
                     if self.savepdb == True:
                         proteins[oxy].atoms.write('%s_OXY_%s.pdb' % (self.prefix,oxy+1))
