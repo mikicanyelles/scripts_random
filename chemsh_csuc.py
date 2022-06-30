@@ -236,7 +236,7 @@ for {{ set rc $rc_i }} {{ $rc < $rc_f }} {{ set rc [ expr $rc + $step ] }} {{
 
         # Save first energy
         if {{ $k == 0 }} {{
-            set energy_0 $final_energy 
+            set energy_0 $final_energy
         }}
 
 
@@ -276,7 +276,6 @@ exit
 
 
 """
-
 
 
 values = {
