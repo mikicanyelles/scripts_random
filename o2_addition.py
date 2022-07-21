@@ -49,6 +49,7 @@ if __name__ == '__main__':
         type=str,
         action='store',
         choices=['high', 'medium', 'low'],
+        default='high',
         help='Options for selecting the resolution when placing the oxygens. \'High\' generates 26 places, \'medium\' generates 18 places and \'low\' generates 6 places.',
         )
 
@@ -89,10 +90,8 @@ if __name__ == '__main__':
     at_num      = args['at_num_index']
     distance    = args['distance']
 
-    if args['resolution'] == None:
-        resolution = 3.0
-    else :
-        resolution = args['resolution']
+    resolution = args['resolution']
+    print(resolution)
 
     prefix = args['output_prefix']
 
@@ -128,7 +127,7 @@ class AddOxygen:
         self.coc           = self.protein.select_atoms('bynum %s' % at_num).positions[0]
         self.distance      = distance
         self.resolution    = resolution
-        self.savepdb      = savepdb
+        self.savepdb       = savepdb
         self.prefix        = prefix
         self.hide_warnings = hide_saving_warnings
 
@@ -220,24 +219,27 @@ class AddOxygen:
         return oxy
 
 
-    def build_positions(self, oxy, distance=3.0, resolution='high'):
+    def build_positions(self, oxy):
         """
         DESCRIPTION:
 
         """
+        print(self.resolution)
+        print(self.distance)
 
-        if distance != 3.0:
-            self.distance = distance
-        if resolution != 'high':
-            self.resolution = resolution
+        #if distance != 3.0:
+        #    self.distance = distance
+        #if resolution != 'high':
+        #    self.resolution = resolution
+        self.resolution = 'high'
 
         o2_interatomic = 1.209152596
 
-        if resolution.lower() in ('high', 'h'):
+        if str(self.resolution).lower() in ('high', 'h'):
             positions = self.positions['high']
-        elif resolution.lower() in ('medium', 'm'):
+        elif str(self.resolution).lower() in ('medium', 'm'):
             positions = self.positions['medium']
-        elif resolution.lower() in ('low', 'l'):
+        elif str(self.resolution).lower() in ('low', 'l'):
             positions = self.positions['low']
 
         oxys = []
@@ -248,8 +250,8 @@ class AddOxygen:
 
 
             oxys[p].atoms.positions = np.array(
-                [positions[p]*(distance)+self.coc,
-                positions[p]*(distance+o2_interatomic)+self.coc])
+                [positions[p]*(self.distance)+self.coc,
+                positions[p]*(self.distance+o2_interatomic)+self.coc])
 
         return oxys
 
@@ -448,7 +450,7 @@ class AddOxygen:
     def run(self, saveall=True):
 
         #u             = AddOxygen()
-        oxys                  = self.build_positions(self.create_o2_universe())
+        oxys                  = self.build_positions(self.create_o2_universe())#, self.distance)#, self.resolution)
         proteins              = self.merge_protein_oxy(oxys)
         not_clashing_oxys_ids = self.check_clashes(proteins)
         not_clashing_oxys = []
