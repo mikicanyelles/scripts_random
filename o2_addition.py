@@ -91,7 +91,6 @@ if __name__ == '__main__':
     distance    = args['distance']
 
     resolution = args['resolution']
-    print(resolution)
 
     prefix = args['output_prefix']
 
@@ -224,8 +223,6 @@ class AddOxygen:
         DESCRIPTION:
 
         """
-        print(self.resolution)
-        print(self.distance)
 
         #if distance != 3.0:
         #    self.distance = distance
