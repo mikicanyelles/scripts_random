@@ -49,6 +49,7 @@ if __name__ == '__main__':
         type=str,
         action='store',
         choices=['high', 'medium', 'low'],
+        default='high',
         help='Options for selecting the resolution when placing the oxygens. \'High\' generates 26 places, \'medium\' generates 18 places and \'low\' generates 6 places.',
         )
 
@@ -128,7 +129,7 @@ class AddOxygen:
         self.coc           = self.protein.select_atoms('bynum %s' % at_num).positions[0]
         self.distance      = distance
         self.resolution    = resolution
-        self.savepdb      = savepdb
+        self.savepdb       = savepdb
         self.prefix        = prefix
         self.hide_warnings = hide_saving_warnings
 
@@ -220,22 +221,19 @@ class AddOxygen:
         return oxy
 
 
-    def build_positions(self, oxy):#, distance=3.0, resolution='high'):
+    def build_positions(self, oxy):
         """
         DESCRIPTION:
 
         """
 
-        self.distance   = distance
-        self.resolution = resolution
-
         o2_interatomic = 1.209152596
 
-        if resolution.lower() in ('high', 'h'):
+        if str(self.resolution).lower() in ('high', 'h'):
             positions = self.positions['high']
-        elif resolution.lower() in ('medium', 'm'):
+        elif str(self.resolution).lower() in ('medium', 'm'):
             positions = self.positions['medium']
-        elif resolution.lower() in ('low', 'l'):
+        elif str(self.resolution).lower() in ('low', 'l'):
             positions = self.positions['low']
 
         oxys = []
@@ -246,8 +244,8 @@ class AddOxygen:
 
 
             oxys[p].atoms.positions = np.array(
-                [positions[p]*(distance)+self.coc,
-                positions[p]*(distance+o2_interatomic)+self.coc])
+                [positions[p]*(self.distance)+self.coc,
+                positions[p]*(self.distance+o2_interatomic)+self.coc])
 
         return oxys
 
@@ -339,7 +337,7 @@ class AddOxygen:
             return protein
 
 
-    def merge_protein_all_oxys(self, oxys, savepdb=True, pdbfilename=pdbfilename, prefix=''):
+    def merge_protein_all_oxys(self, oxys, savepdb=True, pdbfilename=pdbfilename, prefix='', sufix='_ALL_OXY'):
 
         if prefix != '':
             self.prefix = prefix
@@ -390,7 +388,7 @@ class AddOxygen:
                     protein = mda.Merge(protein.residues[:].atoms, oxys[oxy].residues.atoms)
 
         if self.savepdb == True:
-            protein.atoms.write('%s_ALL_OXY.pdb' % (self.prefix))
+            protein.atoms.write('%s_%s.pdb' % (self.prefix, sufix))
 
         if self.hide_warnings == True:
             warnings.filterwarnings('default')
@@ -407,6 +405,10 @@ class AddOxygen:
         if prefix != '':
             self.prefix = prefix
 
+
+
+        oxy_indices = []
+
         fc  = open(self.prefix + '_clashes.txt', 'w')
         fnc = open(self.prefix + '_noclashes.txt', 'w')
 
@@ -415,6 +417,7 @@ class AddOxygen:
         #print('The following positions have a clash with an atom of the protein or the substrate.\n\n')
         print('The following positions do not have a clash with an atom of the protein or the substrate.\n\n')
 
+        counter = 0
         for protein in range(len(proteins)):
 
             sel_oxyenv  = proteins[protein].select_atoms('(around 4 resname OXY) and not resname OXY').positions
@@ -428,18 +431,29 @@ class AddOxygen:
             else :
                 fnc.write('\tPosition number %s does not have a clash.\n' % (protein +1))
                 print('\tPosition number %s does not have a clash.' % (protein +1))
+                oxy_indices.append(counter)
+
+            counter +=1
 
         fc.close()
         fnc.close()
 
+        return oxy_indices
 
 
     def run(self, saveall=True):
 
         #u             = AddOxygen()
-        oxys          = self.build_positions(self.create_o2_universe())
-        proteins      = self.merge_protein_oxy(oxys)
-        self.check_clashes(proteins)
+        oxys                  = self.build_positions(self.create_o2_universe())#, self.distance)#, self.resolution)
+        proteins              = self.merge_protein_oxy(oxys)
+        not_clashing_oxys_ids = self.check_clashes(proteins)
+        not_clashing_oxys = []
+
+        for id in not_clashing_oxys_ids:
+            not_clashing_oxys.append(oxys[id])
+
+        self.merge_protein_all_oxys(not_clashing_oxys, sufix='NOCLASH_OXY')
+
         if saveall == True:
             self.merge_protein_all_oxys(oxys)
 
