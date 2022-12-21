@@ -90,7 +90,7 @@ if __name__ == '__main__':
     distance    = args['distance']
 
     if args['resolution'] == None:
-        resolution = 3.0
+        resolution = 'high'
     else :
         resolution = args['resolution']
 
@@ -220,16 +220,14 @@ class AddOxygen:
         return oxy
 
 
-    def build_positions(self, oxy, distance=3.0, resolution='high'):
+    def build_positions(self, oxy):#, distance=3.0, resolution='high'):
         """
         DESCRIPTION:
 
         """
 
-        if distance != 3.0:
-            self.distance = distance
-        if resolution != 'high':
-            self.resolution = resolution
+        self.distance   = distance
+        self.resolution = resolution
 
         o2_interatomic = 1.209152596
 
