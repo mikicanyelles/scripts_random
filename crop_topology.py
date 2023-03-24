@@ -586,6 +586,20 @@ def main(argsdict=argsdict):
                 print('Type just \'yes\' or \'no\'.')
                 continue
 
+    if options['crop pdb'] == True:
+
+        while True:
+            quest = input('Do you want to crop the system ([y]/n)? ')
+
+            if quest in ('', 'y', 'yes', 'Y', 'YES', 'Yes', 'yES', 'YeS', 'yEs', 'YEs', '1'):
+                radius = crop_pdb()
+                options_done['crop pdb'] = True
+                break
+            elif quest in ('n', 'no', 'N', 'No', 'NO', 'nO', '0'):
+                break
+            else :
+                print('Type just \'yes\' or \'no\'.')
+                continue
 
     if options['active list'] == True:
         while True:
