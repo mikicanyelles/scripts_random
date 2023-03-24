@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from MDAnalysis import Universe
- import sys
+import sys
 
 def parser():
     list_name  = sys.argv[1]
