@@ -353,8 +353,7 @@ def crop_pdb(argsdict=argsdict):
             continue
 
     import sys; sys.setrecursionlimit(15000)
-    cropped_ats = u_pdb.select_atoms('protein or (around %s (resid %s or resname %s)) or (resid %s or resname %s)' % (radius, ligand, ligand, ligand, ligand:w
-                                                                                                                      ))
+    cropped_ats = u_pdb.select_atoms('protein or (around %s (resid %s or resname %s)) or (resid %s or resname %s)' % (radius, ligand, ligand, ligand, ligand))
     #print(cropped_ats)
 
     select_resids = 'resid ' + ' or resid '.join([str(r) for r in list(set(cropped_ats.resids))])
