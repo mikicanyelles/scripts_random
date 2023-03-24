@@ -3,6 +3,8 @@
 from MDAnalysis import Universe
 import sys
 
+sys.setrecursionlimit(100000)
+
 def parser():
     list_name  = sys.argv[1]
     pdb_name = sys.argv[2]
@@ -35,8 +37,6 @@ def main(list_name, pdb_name, out_name):
 
     atoms_sel_list = ''
 
-    if sys.getrecursionlimit() < len(atoms_num):
-        sys.setrecursionlimit(len(atoms_num) + 1000)
 
     for i in range(len(atoms_num)):
         if i == len(atoms_num) - 1:
