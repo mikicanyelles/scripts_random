@@ -35,7 +35,7 @@ def main(list_name, pdb_name, out_name):
 
     u = Universe(pdb_name)
 
-    atoms_sel_list = 'bynum ' + ' or bynum'.join([ str(at) for at in atoms_num ])
+    atoms_sel_list = 'bynum ' + ' or bynum '.join([ str(at) for at in atoms_num ])
 
 
     #for i in range(len(atoms_num)):
