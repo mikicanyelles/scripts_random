@@ -1,14 +1,14 @@
 # coding: utf-8
 
 from MDAnalysis import Universe
-from sys import getrecursionlimit, argv
+ import sys
 
 def parser():
-    list_name  = argv[1]
-    pdb_name = argv[2]
+    list_name  = sys.argv[1]
+    pdb_name = sys.argv[2]
 
-    if len(argv) == 4:
-        out_name = argv[3]
+    if len(sys.argv) == 4:
+        out_name = sys.argv[3]
     else :
         out_name = list_name
 
@@ -35,8 +35,8 @@ def main(list_name, pdb_name, out_name):
 
     atoms_sel_list = ''
 
-    if getrecursionlimit() < len(atoms_num):
-        setrecursionlimit(len(atoms_num) + 1000)
+    if sys.getrecursionlimit() < len(atoms_num):
+        sys.setrecursionlimit(len(atoms_num) + 1000)
 
     for i in range(len(atoms_num)):
         if i == len(atoms_num) - 1:
