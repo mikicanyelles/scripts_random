@@ -51,8 +51,8 @@ def options_parser(argsdict=argsdict):
     'active list', 'parameters adaption'.
     '''
 
-    options      = {'crop parameters' : None, 'active list' : None, 'parameters adaption' : None}
-    options_done = {'crop parameters' : False, 'active list' : False, 'parameters adaption' : False}
+    options      = {'crop parameters' : False, 'active list' : False, 'parameters adaption' : False, 'crop pdb' : False}
+    options_done = {'crop parameters' : False, 'active list' : False, 'parameters adaption' : False, 'crop pdb' : False}
 
     if argsdict['parameters'] != None and (argsdict['coordinates'] != None or argsdict['pdb'] != None):
         options['crop parameters']     = True
@@ -60,14 +60,11 @@ def options_parser(argsdict=argsdict):
         options['parameters adaption'] = True
 
     elif argsdict['parameters'] != None and argsdict['coordinates'] == None and argsdict['pdb'] == None:
-        options['crop parameters']     = False
-        options['active list']         = False
         options['parameters adaption'] = True
 
     elif (argsdict['parameters'] == None and argsdict['coordinates'] == None) and argsdict['pdb'] != None:
-        options['crop parameters']     = False
         options['active list']         = True
-        options['parameters adaption'] = False
+        options['crop pdb']            = True
 
     elif argsdict['parameters'] == None and argsdict['coordinates'] == None and argsdict['pdb'] == None:
         print('No filename has been input, so there is nothing to do.')
@@ -237,6 +234,127 @@ def crop_top(argsdict=argsdict):
     os.rename(output + '.cropped.pdb.tmp', output + '.cropped.pdb')
 
     print('Cropped topology and coordinates have been saved as \'%s\', \'%s\' and \'%s\'' % (output + '.cropped.prmtop', output + '.cropped.inpcrd', output + '.cropped.pdb'))
+
+    return radius
+
+
+def crop_pdb(argsdict=argsdict):
+    '''
+    This functions takes the input pdb and crops it
+    taking a residue as the centre and specifying a radius around it.
+    It saves the cropped pdb file and names it with the output string
+    or with the filename of the parameters, adding always the '.cropped' string.
+    It returns the value of the selected radius, so it can be used as threshold
+    for the active_atoms_list function.
+    '''
+
+    if argsdict['pdb'] != None:
+        pdb = argsdict['pdb']
+
+
+    if argsdict['output'] != None:
+        output = argsdict['output']
+    elif argsdict['output'] == None:
+        output = pdb[:-4]
+
+    if str(output + '.cropped.pdb') in os.listdir():
+        while True:
+            quest = input('The file exist. Do you want to overwrite it ([y]/n)?')
+
+            if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
+                if str(output + '.cropped.pdb') in os.listdir():
+                    os.remove(str(output + '.cropped.pdb'))
+                break
+            elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
+                print('The cropped parameters cannot be saved. Rerun the script specifiying an output name or let overwrite the file.')
+                quit()
+                break
+            else :
+                print('Please, answer \'yes\' or \'no\'.')
+                continue
+
+    u_pdb = Universe(pdb)
+
+    ligand = input('Type the number or the three letters code (only if it is a non-standard residue) of the central residue: ')
+    try:
+        sel = str(u_pdb.select_atoms('resid %s or resname %s' % (ligand, ligand)).residues)
+
+        print('The selected residue is %s' % sel[24:-3])
+        err = False
+
+    except SelectionError:
+        print('The selected residue does not exist. Please, reselect it.')
+        err = True
+
+    while True:
+        if err == True:
+            quest = 'no'
+        else :
+            quest = input('Is the residue correct ([y]/n)? ')
+
+        if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
+            break
+        elif quest in ('no', 'NO', 'No', 'nO', 'n', 'N', 0):
+            if err != True:
+                print('Please, reselect the ligand then.')
+
+            err = False
+            ligand = input('Type the number or the three letters code (only if it is a non-standard residue) of the central residue: ')
+            try:
+                if type(ligand) is int:
+                    sel = str(u_pdb.select_atoms('resid %s' % ligand).residues)
+                if type(ligand) is str:
+                    sel = str(u_pdb.select_atoms('resname %s' % ligand).residues)
+                    print('The selected residue is %s' % sel[24:-3])
+
+            except SelectionError:
+                print('The selected residue does not exist. Please, reselect it.')
+                err = True
+
+            continue
+        else :
+            print('Type only yes or no')
+            continue
+
+
+    err = False
+    radius = input('Type the desired radius around the selected ligand for the water drop (in ang): ')
+    try:
+        float(radius)
+        print('The selected radius is %s ang' % radius)
+
+    except ValueError:
+        print('Type a number')
+        err = True
+
+    while True:
+        if err == True:
+            quest = 'no'
+        else :
+            quest = input('Is this correct ([y]/n)? ')
+
+        if quest in ('', 'y', 'Y', 'yes', 'YES', 'Yes', 'yES', 'YEs', 'yeS', 'yEs', 'YeS', 1):
+            break
+        elif ('no', 'NO', 'No', 'nO', 0):
+            print('Type the number again.')
+
+            radius = input('Type the desired radius around the selected ligand for the water drop (in ang): ')
+            try:
+                float(radius)
+                print('The selected radius is %s ang' % radius)
+                err = False
+
+            except ValueError:
+                print('Type a number')
+                err = True
+            continue
+        else :
+            print('I did not understand the answer. Please, answer again.')
+            continue
+
+
+    cropped = u_pdb.select_atoms('around %s (resid %s or resname %s)' % (radius, ligand, ligand))
+    cropped.write(str(output + '.cropped.pdb'))
 
     return radius
 
