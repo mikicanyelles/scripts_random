@@ -35,14 +35,14 @@ def main(list_name, pdb_name, out_name):
 
     u = Universe(pdb_name)
 
-    atoms_sel_list = ''
+    atoms_sel_list = 'bynum ' + ' or bynum'.join([ str(at) for at in atoms_num ])
 
 
-    for i in range(len(atoms_num)):
-        if i == len(atoms_num) - 1:
-            atoms_sel_list = atoms_sel_list + 'bynum ' + str(atoms_num[i])
-        else :
-            atoms_sel_list = atoms_sel_list + 'bynum ' + str(atoms_num[i]) + ' or '
+    #for i in range(len(atoms_num)):
+    #    if i == len(atoms_num) - 1:
+    #        atoms_sel_list = atoms_sel_list + 'bynum ' + str(atoms_num[i])
+    #    else :
+    #        atoms_sel_list = atoms_sel_list + 'bynum ' + str(atoms_num[i]) + ' or '
 
     atoms_sel = u.select_atoms(atoms_sel_list)
 
